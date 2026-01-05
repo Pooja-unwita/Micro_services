@@ -1,0 +1,18 @@
+[project]
+name = "project-micro"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+   "fastapi>=0.127.0",
+   "httpx>=0.28.1",
+   "nltk>=3.9.2",
+   "pyjwt>=2.10.1",
+   "pymilvus[model]>=2.6.5",
+   "python-jose>=3.5.0",
+   "python-multipart>=0.0.21",
+   "ray[serve]>=2.53.0",
+   "scikit-learn>=1.8.0",
+   "torch>=2.9.1",
+]
