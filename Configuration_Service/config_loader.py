@@ -3,10 +3,11 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException,Query,Depends
 from fastapi.responses import FileResponse
 from Configuration_Service.models.config_input import ConfigInput
-
+from Configuration_Service.routers.auth import app as auth_router
+from Configuration_Service.routers.auth import verify_token
     
 app = FastAPI()
-
+app.include_router(auth_router)
 @serve.deployment
 @serve.ingress(app)
 class ConfigurationService:
@@ -38,10 +39,8 @@ class ConfigurationService:
         except Exception as e:
             raise 
  
-            
-
     @app.get("/get_config_file")
-    async def get_config(self, service_name: str = Query()): 
+    async def get_config(self, service_name: str = Query(), token: dict = Depends(verify_token)):
         """
         Retrieve and serve a configuration file for the specified service.
         
@@ -67,6 +66,7 @@ class ConfigurationService:
             Returns: embed.yaml file as download
         """
         try:
+            print(f"Token payload: {token}")
             if service_name not in self.service_file_map:
                 raise HTTPException(
                     status_code=400,

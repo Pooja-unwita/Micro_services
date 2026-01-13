@@ -1,9 +1,9 @@
-# proxy_location: EveryNode
+proxy_location: EveryNode
 
-# # http_options:
-# #   host: "localhost"
-# #   port: 8001
-# #   request_timeout_s: 100
+http_options:
+  host: "localhost"
+  port: 8002
+  request_timeout_s: 100
 
 # logging_config:
 #   log_level: "DEBUG"
@@ -20,8 +20,8 @@ applications:
   args:
     tei_url: "http://localhost:8083/embed"
     query_annotation: "querie"
-    splade_model_name: "/home/unwita/Documents/Project_competition_offline/sparse_models/splade-cocondenser-selfdistil"
-    splade_device: "cuda:0"        # or "cuda"
+    splade_model_name: "naver/splade-cocondenser-selfdistil"
+    splade_device: "cpu"        # or "cuda:0"
     tfidf_max_features: 50000
 
 
@@ -78,7 +78,7 @@ applications:
     health_check_timeout_s: 30.0
     ray_actor_options:
       num_cpus: 0.1
-      num_gpus: 0.1
+      num_gpus: 0.0
     
   
   - name: EmbeddingService

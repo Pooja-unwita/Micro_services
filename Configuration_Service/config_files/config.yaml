@@ -5,12 +5,15 @@ http_options:
   port: 8001
   request_timeout_s: 100
 
-logging_config:
+logging_config:  
   log_level: "DEBUG"
   logs_dir: "ray_logs"
   encoding: "JSON"
 
 applications:
+
+
+
 - name: Configuration_service
   import_path: Configuration_Service.config_loader:config_app
   route_prefix: /config
@@ -42,8 +45,8 @@ applications:
   args:
     tei_url: "http://localhost:8083/embed"
     query_annotation: "querie"
-    splade_model_name: "naver/splade-cocondenser-ensembledistil"
-    splade_device: "cpu"        # or "cuda"
+    splade_model_name: "naver/splade-cocondenser-selfdistil"
+    splade_device: "cpu"        # or "cuda:0"
     tfidf_max_features: 50000
 
 

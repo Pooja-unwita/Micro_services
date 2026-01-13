@@ -1,0 +1,29 @@
+# Python bytecode
+__pycache__/
+
+
+# Virtual environments
+.venv
+
+
+# Git
+.git/
+.gitignore
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+
+# Editor / OS junk
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+
+# Local Ray artifacts
+uv.lock
+
+.python-version
+
