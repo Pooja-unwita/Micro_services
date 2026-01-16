@@ -6,7 +6,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(funcName)s() - %(message)s',
     level= logging.INFO)
 logger = logging.getLogger(__name__)
-
 def run_serve_cli(config_path: str):
     """Run 'serve run' CLI command with the config file."""
     

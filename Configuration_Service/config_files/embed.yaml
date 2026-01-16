@@ -2,13 +2,9 @@ proxy_location: EveryNode
 
 http_options:
   host: "localhost"
-  port: 8002
+  port: 8001
   request_timeout_s: 100
 
-# logging_config:
-#   log_level: "DEBUG"
-#   logs_dir: "ray_logs"
-#   encoding: "JSON"
 
 applications:
 - name: Embedding_Service
@@ -18,11 +14,16 @@ applications:
   #   working_dir: "."
 
   args:
+    tei_flag: false
+    custom_flag: true
     tei_url: "http://localhost:8083/embed"
     query_annotation: "querie"
     splade_model_name: "naver/splade-cocondenser-selfdistil"
     splade_device: "cpu"        # or "cuda:0"
     tfidf_max_features: 50000
+    custom_embed_model: "Qwen/Qwen3-Embedding-0.6B"
+    micro_batch_size: 16
+    concurrency: 4
 
 
   deployments:

@@ -3,13 +3,14 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException,Query,Depends
 from fastapi.responses import FileResponse
 from Configuration_Service.models.config_input import ConfigInput
-from Configuration_Service.routers.auth import app as auth_router
-from Configuration_Service.routers.auth import verify_token
-    
+from Configuration_Service.routers.token_verifier import app as auth_router
+from Configuration_Service.routers.token_verifier import verify_token
+
+import uvicorn
+
 app = FastAPI()
-app.include_router(auth_router)
-@serve.deployment
-@serve.ingress(app)
+
+
 class ConfigurationService:
     """
     A Ray Serve deployment that provides configuration files for various services.
@@ -96,4 +97,5 @@ class ConfigurationService:
             detail=f"Unexpected error while serving config: {str(e)}"
         )
             
-config_app = ConfigurationService.bind()
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=9000)

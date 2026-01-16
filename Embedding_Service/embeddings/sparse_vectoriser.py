@@ -9,13 +9,19 @@ from typing import List, Dict
 
 @serve.deployment
 class SparseVectorizer:
+    """ 
+    A Ray Serve deployment that provides sparse vectorization methods using BM25, SPLADE, and TF-IDF.
+    """
     def __init__(self, splade_model_name, splade_device, tfidf_max_features):
+        """
+        Initialize the SparseVectorizer with specified models and parameters."""
         try:
             analyzer = build_default_analyzer()
             self.splade_model_name= splade_model_name
             self.splade_device = splade_device
             self.bm25_ef = BM25EmbeddingFunction(analyzer)
-            self.splade_ef = model.sparse.SpladeEmbeddingFunction(model_name=self.splade_model_name, device = self.splade_device)
+            self.splade_ef = model.sparse.SpladeEmbeddingFunction(model_name=self.splade_model_name, 
+                                                                  device = self.splade_device)
             self.tf_vectorizer = TfidfVectorizer(max_features= tfidf_max_features)
             
         except Exception as e:
@@ -39,7 +45,6 @@ class SparseVectorizer:
                 dicts.append({int(i): float(v) for i, v in zip(indices, values)})
             return dicts
         except Exception as e:
-            #logger.error(f"Error converting CSR to dict: {e}")
             raise
     
     async def bm25_vectorise_text(self, docs:list) -> List[dict]:
@@ -58,10 +63,8 @@ class SparseVectorizer:
             self.bm25_ef.fit(docs.text)
             docs_embeddings_org = self.bm25_ef.encode_documents(docs.text)
             docs_embeddings = self.csr_to_dict(docs_embeddings_org)
-            #logger.info("Embedding produced for BM25 vectoriser")
             return docs_embeddings
         except Exception as e:
-            #logger.error(f"Error during BM25 text vectorization: {e}")
             raise
 
     async def build_splade_embeddings(self, docs: list) -> list[Dict]:
@@ -77,10 +80,8 @@ class SparseVectorizer:
 
             docs_embeddings = self.splade_ef.encode_documents(docs.text)
             docs_embeddings_conv= self.csr_to_dict(docs_embeddings)
-            #logger.info("Embedding produced for Splade vectoriser")
             return docs_embeddings_conv
         except Exception as e:
-            #logger.error(f"Error during SPLADE text vectorization: {e}")
             raise
 
     async def build_TFIDF_embeddings(self, docs: list) -> list[Dict]:
@@ -98,11 +99,9 @@ class SparseVectorizer:
         
         # Convert CSR matrix to list of dicts (same as other methods)
             docs_embeddings = self.csr_to_dict(vectors_sparse)
-            #logger.info("Embedding produced for TFIDF vectoriser")
             return docs_embeddings
         
         except Exception as e:
-            #logger.error(f"Error during TF-IDF text vectorization: {e}")
             raise
         
    

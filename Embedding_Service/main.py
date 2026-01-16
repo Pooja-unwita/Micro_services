@@ -1,7 +1,7 @@
 import subprocess
 import sys
 import asyncio
-from config_handler import ConfigurationClient
+from Handlers.config_handler import ConfigurationClient
 import os
 import time
 

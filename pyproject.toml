@@ -1,18 +1,23 @@
 [project]
-name = "project-micro"
+name = "serve-ray"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-   "fastapi>=0.127.0",
-   "httpx>=0.28.1",
-   "nltk>=3.9.2",
-   "pyjwt>=2.10.1",
-   "pymilvus[model]>=2.6.5",
-   "python-jose>=3.5.0",
-   "python-multipart>=0.0.21",
-   "ray[serve]>=2.53.0",
-   "scikit-learn>=1.8.0",
-   "torch>=2.9.1",
+    "aiohttp>=3.13.3",
+    "cryptography>=46.0.3",
+    "fastapi>=0.127.0",
+    "httpx>=0.28.1",
+    "nltk>=3.9.2",
+    "pyarrow>=22.0.0",
+    "pyjwt>=2.10.1",
+    "pymilvus[model]>=2.6.6",
+    "python-jose>=3.5.0",
+    "python-multipart>=0.0.21",
+    "ray[serve]>=2.53.0",
+    "requests>=2.32.5",
+    "scikit-learn>=1.8.0",
+    "torch>=2.9.1",
+    "uvicorn>=0.40.0",
 ]

@@ -2,11 +2,18 @@
 from ray import serve
 import httpx
 import os
-from Embedding_Service.models.embed_input import TEIInput
+from Embedding_Service.models.models import TEIInput
 
 @serve.deployment
 class QueryVectorizer:
+    """
+    A Ray Serve deployment that vectorizes query texts using an external TEI service with configured annotation
+    """
+
     def __init__(self, tei_url, query_annotation):
+        """
+        Initialize the QueryVectorizer with TEI service URL and annotation type.
+        """
         self.tei_url = tei_url
         self.annotation = query_annotation
         self.client = httpx.AsyncClient(
@@ -16,9 +23,10 @@ class QueryVectorizer:
                 max_connections=300
             )
         )
-        self.replica_id = os.getpid() #remove later if not needed
+        #self.replica_id = os.getpid() #remove later if not needed
 
     async def embed(self, payload):
+        """Embed the input texts using the TEI service with specified annotation."""
         try:
             headers = {
             "Accept": "application/json",

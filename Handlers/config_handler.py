@@ -1,6 +1,6 @@
 import logging
 import httpx
-from auth_handler import AuthenticationClient 
+from Handlers.auth_handler import AuthenticationClient 
 from pathlib import Path
 import yaml
 
@@ -15,11 +15,11 @@ class ConfigurationClient:
 
     async def startup(self):
         if self.client is None:
-            token=await self.auth_client.get_token(self.caller)
+            x=await self.auth_client.get_token()
             
-            self._headers["Authorization"] = f"Bearer {token['access_token']}"
+            self._headers["Authorization"] = f"Bearer {x['access_token']}"
 
-           
+            print(x)
             # logger.info("Starting up ConfigurationClient httpx session")
             self.client = httpx.AsyncClient(
                 base_url=self.base_url,
