@@ -1,101 +1,67 @@
-from ray import serve
+import os
+import yaml
 from pathlib import Path
-from fastapi import FastAPI, HTTPException,Query,Depends
+from decouple import config
+from fastapi import APIRouter, Query, Depends, Header, HTTPException
 from fastapi.responses import FileResponse
-from Configuration_Service.models.config_input import ConfigInput
-from Configuration_Service.routers.token_verifier import app as auth_router
-from Configuration_Service.routers.token_verifier import verify_token
+from models.config_input import ConfigInput
+from services.config_service import ConfigurationService
+from routers.token_verifier import verify_token
 
-import uvicorn
+router = APIRouter()
+config_service = ConfigurationService()
 
-app = FastAPI()
+@router.get("/get_config_file")
+async def get_config_file(
+    service_name: str = Query(...),
+    token: dict = Depends(verify_token),
+):
+  
+    return await config_service.get_config_file(service_name)
 
 
-class ConfigurationService:
+# Service API Key - stored in environment variable
+SERVICE_API_KEY = config("SERVICE_API_KEY", "change-me-in-production")
+
+@router.get("/bootstrap/handler")
+async def get_handler_config(
+    service_name: str = Query(..., description="Name of the service requesting config"),
+    x_service_key: str = Header(None, description="Service API key for authentication")
+):
     """
-    A Ray Serve deployment that provides configuration files for various services.
+    Bootstrap endpoint for services to fetch their handler.yaml
+    Uses service-to-service API key (NOT user tokens)
     
-    This service acts as a centralized configuration provider, mapping service names
-    to their corresponding configuration files and serving them via HTTP endpoints.
-    
-    Attributes:
-        service_file_map (dict): A mapping of service names to their config file names.
+    This endpoint is called during service startup before any user authentication
     """
     
-    def __init__(self):
-        """
-        Initialize the Configuration Service.
-        
-        Sets up the mapping between service names and their corresponding
-        configuration file names.
-        """
-        try:
-            self.base_dir = Path(__file__).parent
-            self.config_dir =self.base_dir / "config_files"
-            self.service_file_map = {
-                    "Embedding_Service": "embed.yaml",
-                    "VectorDB_Service" : "vectordb.yaml",
-                    "Ingestion_Service": "ingestion.yaml"
-                }
-        except Exception as e:
-            raise 
- 
-    @app.get("/get_config_file")
-    async def get_config(self, service_name: str = Query(), token: dict = Depends(verify_token)):
-        """
-        Retrieve and serve a configuration file for the specified service.
-        
-        This endpoint accepts a service name and returns the corresponding
-        configuration file as a YAML file download.
-        
-        Args:
-            service_name (str): The name of the service requesting configuration.
-                               Must be one of the keys in service_file_map.
-        
-        Returns:
-            FileResponse: The configuration file as a downloadable YAML file.
-        
-        Raises:
-            HTTPException: 
-                - 400 if the service name is not recognized
-                - 500 if the config file is not found or other unexpected errors occur
-        
-        Example:
-            POST /config
-            Body: {"service_name": "Embedding_Service"}
-            
-            Returns: embed.yaml file as download
-        """
-        try:
-            print(f"Token payload: {token}")
-            if service_name not in self.service_file_map:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Unknown service name"
-                )
-
-            config_filename = self.service_file_map[service_name]
-            config_path = self.config_dir / config_filename
-            if not config_path.exists():
-                raise HTTPException(
-                    status_code=500,
-                    detail="Config file not found"
-                )
-
-            return FileResponse(
-                path=config_path,
-                media_type="application/x-yaml",
-                filename=config_path.name
-            )
-        
-        except HTTPException:
-            raise 
-
-        except Exception as e:
-            raise HTTPException(
-            status_code=500,
-            detail=f"Unexpected error while serving config: {str(e)}"
+    # Verify service API key
+    if x_service_key != SERVICE_API_KEY:
+        raise HTTPException(
+            status_code=403, 
+            detail="Invalid or missing service API key"
         )
-            
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=9000)
+    
+    # Construct path to handler config
+    config_path = Path(__file__).parent.parent / "config_files" / "handler_config.yaml"
+    
+    if not config_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Handler config not found for service: {service_name}"
+        )
+    
+    try:
+        return await config_service.get_config_file(service_name="Handler")
+        with open(config_path, 'r') as f:
+            config_data = yaml.safe_load(f)
+        return config_data
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error loading handler config: {str(e)}"
+        )
+
+
+

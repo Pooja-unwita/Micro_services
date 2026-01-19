@@ -2,8 +2,9 @@ import logging
 import httpx
 from pathlib import Path
 import yaml
-from utils.set_attribute import AttributeSetter
 import asyncio
+from utils.set_attribute import AttributeSetter
+
 
 class ConfigurationClient:
     def __init__(self, config:dict):
@@ -61,7 +62,7 @@ class ConfigurationClient:
                 response.raise_for_status()
                 yaml_data = yaml.safe_load(response.content)
             
-                output = output_path/ "embed.yaml"
+                output =output_path/filename
                 with output.open("w") as f:
                     yaml.safe_dump(yaml_data, f)
                 print(f"YAML file saved at: {output}")

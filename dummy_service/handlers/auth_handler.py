@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 import jwt
 import requests
-from ..utils.set_attribute import AttributeSetter
+from utils.set_attribute import AttributeSetter
 
 _token_context: ContextVar[Optional[str]] = ContextVar('auth_token', default=None)
 _token_expiry_context: ContextVar[Optional[datetime]] = ContextVar('token_expiry', default=None)

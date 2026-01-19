@@ -3,7 +3,7 @@ import httpx
 from pathlib import Path
 import yaml
 from utils.set_attribute import AttributeSetter
-import asyncio
+
 
 class ConfigurationClient:
     def __init__(self, config:dict):

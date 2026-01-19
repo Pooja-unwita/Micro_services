@@ -25,13 +25,20 @@ class TextVectorizer:
         self.model_name = custom_embed_model
         self.micro_batch_size = micro_batch_size
         self.concurrency = concurrency
-        self.client = httpx.AsyncClient(
+        
+        if self.custom_flag:
+            self.generator = EmbeddingGenerator(model_name=self.model_name, micro_batch_size=self.micro_batch_size)
+            
+        elif self.tei_flag:
+            
+            self.client = httpx.AsyncClient(
             timeout=30,
             limits=httpx.Limits(
                 max_keepalive_connections=200, #  move all hardcoded values to config later
                 max_connections=300 
+                )
             )
-        )
+
 
     async def embed(self, payload):
         """Embed the input texts (chunks) using the TEI service."""
@@ -63,7 +70,7 @@ class TextVectorizer:
 
                 # Process using map_batches
                 embedded_dataset = ray_dataset.map_batches(
-                    EmbeddingGenerator(model_name=self.model_name, micro_batch_size=self.micro_batch_size),
+                    self.generator,
                     batch_size=self.micro_batch_size,
                     concurrency=self.concurrency,
                     fn_constructor_kwargs={
@@ -71,7 +78,7 @@ class TextVectorizer:
                         "micro_batch_size": self.micro_batch_size,
                     },
                 )
-
+               
                 all_embeddings = []
                 for batch in embedded_dataset.iter_batches(batch_size=None, batch_format="numpy"):
                     all_embeddings.append(batch["embedding"])

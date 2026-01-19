@@ -3,7 +3,7 @@ import logging
 from typing import List, Optional
 import httpx
 from contextvars import ContextVar
-
+from utils.set_attribute import AttributeSetter
 # current_token = ContextVar('jwt_token')
 
 class EmbeddingClient:
@@ -14,8 +14,7 @@ class EmbeddingClient:
 
     def __init__(
         self,
-        base_url: str = "http://127.0.0.1:8001/embed",
-        max_concurrency: int = 100,
+        config: dict,
     ):
 
         """
@@ -25,11 +24,9 @@ class EmbeddingClient:
             base_url: The base URL of the embedding service.
             max_concurrency: Maximum number of parallel requests.
         """
-        self.base_url = base_url
-        
+        AttributeSetter.set_attributes(self, config)
         self.client: Optional[httpx.AsyncClient] = None
-        self._headers = {"Content-Type": "application/json"}
-        self.semaphore = asyncio.Semaphore(max_concurrency)
+        self.semaphore = asyncio.Semaphore(self.max_concurrency)
         self._token_lock = asyncio.Lock() # To prevent multiple simultaneous token refreshes
 
 
@@ -39,12 +36,12 @@ class EmbeddingClient:
 
                 self.client = httpx.AsyncClient(
                                 base_url=self.base_url,
-                                timeout=httpx.Timeout(None),
+                                timeout=self.timeout,
                                 limits=httpx.Limits(
-                                    max_connections=100,
-                                    max_keepalive_connections=20,
+                                    max_connections=self.http_limits["max_connections"],
+                                    max_keepalive_connections=self.http_limits["max_keepalive_connections"],
                                 ),
-                                headers=self._headers,
+                                headers=self.headers,
                             )            
         except Exception as e:
             raise e
@@ -70,31 +67,16 @@ class EmbeddingClient:
 
         async with self.semaphore:
             try:
-                headers = {
-                    **self._headers,
+                _headers = {
+                    **self.headers,
                     "Authorization": f"Bearer {token}",
                     }
                 
-                response = await self.client.post(path, json=payload, headers=headers)
+                response = await self.client.post(path, json=payload, headers=_headers)
                 response.raise_for_status()
                 return response.json()
 
             except httpx.HTTPStatusError as e:
-                # if e.response.status_code == 401:
-                #     # Token is invalid, force refresh
-                #     logging.warning("Auth token expired, refreshing token...")
-                    
-                #     async with self._token_lock:
-                #         # Clear the invalid token
-                #         current_token.delete()
-                #         # Get fresh token
-                #         token = await self.get_token()
-                    
-                #     # Retry once with new token
-                #     params = {"token": token}
-                #     response = await self.client.post(path, json=payload, params=params)
-                #     response.raise_for_status()
-                #     return response.json()
                 
                 raise RuntimeError(
                     f"HTTP {e.response.status_code} from {path}: {e.response.text}"

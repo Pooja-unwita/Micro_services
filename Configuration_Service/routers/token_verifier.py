@@ -1,31 +1,29 @@
-
 import jwt
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from Handlers.auth_handler import AuthenticationClient
+from handlers.auth_handler import AuthenticationClient
+from handlers.handler_config_loader import ConfigLoader
+from fastapi import Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-ISSUER = "http://localhost:8000"
-AUDIENCE = "Auth_Service"
 
-auth_client = AuthenticationClient()
+ISSUER = "Auth_Service"
+AUDIENCE = "FE_Service"
+security = HTTPBearer()
+config_loder = ConfigLoader()
+auth_config = config_loder.get_config(config_key="Authentication")
+auth_client = AuthenticationClient(config=auth_config)
 
-async def verify_token(token: str)->dict: # need to remove some lines like unverified_header
+async def verify_token(token: HTTPAuthorizationCredentials = Depends(security))->dict: # need to remove some lines like unverified_header
     """
     Verifies the JWT token using the public keys from the JWKS endpoint.
     """
+    token = token.credentials
     try:
-        import json
-        unverified_header = jwt.get_unverified_header(token)
-        # print("\n--- Token Header (Unverified) ---")
-        # print(json.dumps(unverified_header, indent=2))
-        # if 'kid' in unverified_header:
-        #     print(f"Extracted KID from token header: {unverified_header['kid']}")
-        # else:
-        #     print("KID not found in token header.")
+       
         jwks_client = auth_client.jwt_client()
         signing_key = jwks_client.get_signing_key_from_jwt(token)
 
-        key_data = signing_key.key
+        
         # print("\n--- Signing Key Found ---")
         # print(f"Key details: {key_data}")
 
