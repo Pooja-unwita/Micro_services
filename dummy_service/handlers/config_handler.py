@@ -56,7 +56,7 @@ class ConfigurationClient:
                         }
                 response = await self.client.get("/get_config_file", params={"service_name": service_name}, headers=_headers)
 
-                print(f"Response headers: {response.headers}")
+                
                 content_disposition=response.headers.get("Content-Disposition")
                 filename=content_disposition.split("filename=")[-1].strip('"')
                 response.raise_for_status()

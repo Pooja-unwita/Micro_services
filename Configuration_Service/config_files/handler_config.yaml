@@ -27,7 +27,7 @@ Configuration:
   headers:
     Content-Type: "application/json"
     User-Agent: "ConfigurationClient/1.0"
-  timeout: 20 # seconds
+  timeout: 30 # seconds
   http_limits:
     max_connections: 100
     max_keepalive_connections: 20
