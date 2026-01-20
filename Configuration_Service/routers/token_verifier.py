@@ -1,15 +1,17 @@
 import jwt
 import sys, os
 from handlers.auth_handler import AuthenticationClient
-from handlers.handler_config_loader import ConfigLoader
+from handlers.handler_config_loader import HandlerConfigLoader
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import logging
 
+logger = logging.getLogger(__name__)
 
 ISSUER = "Auth_Service"
 AUDIENCE = "FE_Service"
 security = HTTPBearer()
-config_loder = ConfigLoader()
+config_loder = HandlerConfigLoader(service_name="Configuration", fetch_from_remote=True)
 auth_config = config_loder.get_config(config_key="Authentication")
 auth_client = AuthenticationClient(config=auth_config)
 
@@ -19,7 +21,7 @@ async def verify_token(token: HTTPAuthorizationCredentials = Depends(security))-
     """
     token = token.credentials
     try:
-       
+        logger.info("Verifying JWT token.")
         jwks_client = auth_client.jwt_client()
         signing_key = jwks_client.get_signing_key_from_jwt(token)
 
@@ -34,8 +36,10 @@ async def verify_token(token: HTTPAuthorizationCredentials = Depends(security))-
             audience=AUDIENCE,
             issuer=ISSUER,
         )
+        logger.info("JWT token verified successfully.")
         return payload
     except Exception as e:
+        logger.error(f"Token verification failed: {e}")
         raise Exception (f"Token verification failed: {e}")
         # print(f"Token verification failed: {e}")
         # return None

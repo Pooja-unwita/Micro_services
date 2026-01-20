@@ -1,35 +1,32 @@
 Authentication:
-  base_url: "http://localhost:8003"
+  base_url: http://localhost:8003
   max_concurrency: 50
+  workers: 1
   headers:
-    Content-Type: "application/json"
-    User-Agent: "AuthenticationClient/1.0"
-  timeout: 10  # seconds
+    Content-Type: application/json
+    User-Agent: AuthenticationClient/1.0
+  timeout: 10
   http_limits:
     max_connections: 100
     max_keepalive_connections: 20
-  
-
 Embedding:
-  base_url: "http://localhost:8004/embed"
+  base_url: http://localhost:8004/embed
   max_concurrency: 50
   headers:
-    Content-Type: "application/json"
-    User-Agent: "EmbeddingClient/1.0"
-  timeout: 10  # seconds
+    Content-Type: application/json
+    User-Agent: EmbeddingClient/1.0
+  timeout: 10
   http_limits:
     max_connections: 100
     max_keepalive_connections: 20
-
 Configuration:
-  base_url: "http://localhost:9000"
+  base_url: http://localhost:9000
+  workers: 1
   max_concurrency: 50
   headers:
-    Content-Type: "application/json"
-    User-Agent: "ConfigurationClient/1.0"
-  timeout: 30 # seconds
+    Content-Type: application/json
+    User-Agent: ConfigurationClient/1.0
+  timeout: 30
   http_limits:
     max_connections: 100
     max_keepalive_connections: 20
-  
-

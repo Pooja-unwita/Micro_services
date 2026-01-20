@@ -21,7 +21,7 @@ applications:
     splade_model_name: "naver/splade-cocondenser-selfdistil"
     splade_device: "cpu"        # or "cuda:0"
     tfidf_max_features: 50000
-    custom_embed_model: "/home/unwita/Documents/Project_competition_offline/tei/models/Qwen3-Embedding-0.6B"
+    custom_embed_model: "Qwen3-Embedding-0.6B"
     micro_batch_size: 16
     concurrency: 4
 

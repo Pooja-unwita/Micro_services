@@ -3,7 +3,7 @@ import logging
 from typing import List, Optional
 import httpx
 from contextvars import ContextVar
-from utils.set_attribute import AttributeSetter
+from ..utils.set_attribute import AttributeSetter
 # current_token = ContextVar('jwt_token')
 
 class EmbeddingClient:

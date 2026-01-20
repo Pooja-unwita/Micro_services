@@ -5,6 +5,8 @@ import httpx
 from contextvars import ContextVar
 from utils.set_attribute import AttributeSetter
 # current_token = ContextVar('jwt_token')
+logger = logging.getLogger(__name__)
+
 
 class EmbeddingClient:
     """
@@ -28,12 +30,12 @@ class EmbeddingClient:
         self.client: Optional[httpx.AsyncClient] = None
         self.semaphore = asyncio.Semaphore(self.max_concurrency)
         self._token_lock = asyncio.Lock() # To prevent multiple simultaneous token refreshes
-
+        logger.info("EmbeddingClient initialized.")
 
     async def startup(self):
         try:
             if self.client is None:
-
+                logger.info("Starting up httpx.AsyncClient for EmbeddingClient.")
                 self.client = httpx.AsyncClient(
                                 base_url=self.base_url,
                                 timeout=self.timeout,
@@ -44,6 +46,7 @@ class EmbeddingClient:
                                 headers=self.headers,
                             )            
         except Exception as e:
+            logger.error(f"Failed to startup EmbeddingClient: {e}")
             raise e
 
     async def shutdown(self):
@@ -61,8 +64,10 @@ class EmbeddingClient:
         
         try:
             if not self.client:
+                logger.info("Shutting down httpx.AsyncClient for EmbeddingClient.")
                 await self.startup()
         except Exception as e:
+            logger.error(f"Failed to shutdown EmbeddingClient: {e}")
             raise e
 
         async with self.semaphore:
@@ -74,15 +79,17 @@ class EmbeddingClient:
                 
                 response = await self.client.post(path, json=payload, headers=_headers)
                 response.raise_for_status()
+                logger.info(f"POST call succeeded.")
                 return response.json()
 
             except httpx.HTTPStatusError as e:
-                
+                logger.error(f"HTTP error on POST {path}: {e}")
                 raise RuntimeError(
                     f"HTTP {e.response.status_code} from {path}: {e.response.text}"
                 ) from e
 
             except httpx.RequestError as e:
+                logger.error(f"Request error on POST {path}: {e}")
                 raise RuntimeError(
                     f"Error contacting {self.base_url}{path}: {e}"
                 ) from e
@@ -90,32 +97,38 @@ class EmbeddingClient:
     
     async def dense_text(self, texts: List[str], token:str):
         try:
+            
             return await self._post("/dense/text", {"text": texts}, token=token)
         except Exception as e:
+            logger.error(f"Error in dense_text: {e}")
             raise e
 
     async def dense_query(self, texts: List[str], token:str):
         try:
             return await self._post("/dense/query", {"text": texts}, token=token)
         except Exception as e:
+            logger.error(f"Error in dense_query: {e}")
             raise e
 
     async def sparse_splade(self, texts: List[str], token):
         try:
             return await self._post("/sparse/splade", {"text": texts}, token=token)
         except Exception as e:
+            logger.error(f"Error in sparse_splade: {e}")
             raise e
 
     async def sparse_bm25(self, texts: List[str], token):
         try:
             return await self._post("/sparse/bm25", {"text": texts}, token=token)
         except Exception as e:
+            logger.error(f"Error in sparse_bm25: {e}")
             raise e
         
     async def sparse_tfidf(self, texts: List[str], token):
         try:
             return await self._post("/sparse/tfidf", {"text": texts}, token=token)
         except Exception as e:
+            logger.error(f"Error in sparse_tfidf: {e}")
             raise e
 
  

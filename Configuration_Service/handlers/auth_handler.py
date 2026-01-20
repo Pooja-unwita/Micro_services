@@ -6,6 +6,9 @@ from typing import Optional
 import jwt
 import requests
 from utils.set_attribute import AttributeSetter
+import logging
+
+logger = logging.getLogger(__name__)
 
 _token_context: ContextVar[Optional[str]] = ContextVar('auth_token', default=None)
 _token_expiry_context: ContextVar[Optional[datetime]] = ContextVar('token_expiry', default=None)
@@ -24,6 +27,7 @@ class AuthenticationClient:
 
     def __init__(self, config:dict):
         AttributeSetter.set_attributes(self, config)
+        logger.info("AuthenticationClient initialized with config.")
 
     def jwt_client(self)-> jwt.PyJWKClient:
         """
@@ -34,6 +38,7 @@ class AuthenticationClient:
             jwks_client = jwt.PyJWKClient(JWKS_URL)
             return jwks_client
         except Exception as e:
+            logger.error(f"Failed to create JWKS client: {e}")
             raise e
         
     async def get_token(self) -> str:
@@ -46,7 +51,7 @@ class AuthenticationClient:
         cached_token = _token_context.get()
         
         if cached_token:
-            print(f"Using cached token: {cached_token[:25]}...")
+            logger.info(f"Using cached token: {cached_token[:25]}...")
             return cached_token
 
         # Acquire lock to prevent multiple token requests in same context
@@ -55,7 +60,7 @@ class AuthenticationClient:
             cached_token = _token_context.get()
             
             if cached_token:
-                print(f"Using cached token (after lock): {cached_token[:25]}...")
+                logger.info(f"Using cached token (after lock): {cached_token[:25]}...")
                 return cached_token
 
             # Request new token
@@ -81,10 +86,10 @@ class AuthenticationClient:
                 # Store token and expiry in THIS task's context
                 _token_context.set(token)
 
-                print(f"Obtained new token: {token[:25]}...")
+                logger.info(f"Obtained new token: {token[:25]}...")
                 return token
             except requests.exceptions.RequestException as e:
-                print(f"Failed to get token: {e}")
+                logger.error(f"Failed to get token: {e}")
                 raise
 
 
@@ -94,6 +99,6 @@ class AuthenticationClient:
         try:
             _token_context.set(None)
             _token_expiry_context.set(None)
-            print("Token cleared from context")
+            logger.info("Token cleared from context")
         except Exception as e:
             raise e

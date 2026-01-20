@@ -1,52 +1,38 @@
 import subprocess
 import sys
+from pathlib import Path
 import asyncio
-from Handlers.config_handler import ConfigurationClient
+from Embedding_Service.handlers.handler_config_loader import HandlerConfigLoader
+from Embedding_Service.handlers.auth_handler import AuthenticationClient
+from Embedding_Service.handlers.config_handler import ConfigurationClient
 import os
 import time
 
-CALLER="embedding_service"
+handler_loader = HandlerConfigLoader(service_name="Embedding", fetch_from_remote=True)
 
-# CONFIG_URL = r"C:\Users\hp\Downloads\Embedding\Embedding\Configuration_service\embed.yaml"
-# LOCAL_CONFIG_PATH = "embed_runtime.yaml"  # Temporary local copy
+auth_client_configs = handler_loader.get_config(config_key="Authentication")
+config_client_configs = handler_loader.get_config(config_key="Configuration")
+
+auth_client = AuthenticationClient(config=auth_client_configs)
+config_client = ConfigurationClient(config=config_client_configs)
 
 
-async def fetch_config() -> dict:
-    """Fetch configuration from config service (or local file)."""
-    # For now, reading from local file
-    # In production, you could fetch from a remote config service:
-    # response = requests.get("http://config-service:8080/embed.yaml")
-    # config = yaml.safe_load(response.text)
+async def main():
     
-    config_client = ConfigurationClient(caller=CALLER)
     await config_client.startup()
-    config_path = await config_client.get_config_file("Embedding_Service")
-    await config_client.shutdown()
-    return config_path
-
-
-def run_serve_cli(config_path: str):
-    """Run 'serve run' CLI command with the config file."""
-    
-    print(f"\nStarting Ray Serve with: serve run {config_path}")
-    print("="*60)
-    
+    token = await auth_client.get_token()
+    ray_yaml_dict, filename = await config_client.fetch_config(service_name="Ray_Cluster",token=token)
+    base_dir = Path(__file__).parent
+    cluster_yaml_path = await config_client.save_yaml(ray_yaml_dict, output_dir=base_dir, filename=filename)
+    print(cluster_yaml_path)
     try:
-        # Run the serve command - this will block until interrupted
-        # Use --blocking flag to keep the process running
-
-        # cmd = ["serve", "deploy", config_path, "--blocking", "--app-dir", "."]
-        # process=subprocess.run(cmd, check=True,stdout=sys.stdout,
-        #     stderr=sys.stderr)
-
         process = subprocess.run(
-            ["serve", "run", config_path],
-            check=True,
-            # Don't capture output - let it stream to console
-            stdout=sys.stdout,
-            stderr=sys.stderr
-        )
-        
+                ["serve", "run", "Embedding_Service/ray_cluster.yaml"],
+                check=True,
+                # Don't capture output - let it stream to console
+                stdout=sys.stdout,
+                stderr=sys.stderr
+            )
     except subprocess.CalledProcessError as e:
         print(f"\n✗ Serve command failed with exit code {e.returncode}")
         sys.exit(1)
@@ -54,26 +40,83 @@ def run_serve_cli(config_path: str):
         print("\n\n✓ Received interrupt signal, shutting down...")
         sys.exit(0)
 
-
-async def main():
-    print("="*60)
-    print("Embedding Service Launcher")
-    print("="*60)
     
-    # 1. Fetch configuration
-    print("\n[1/3] Fetching configuration...")
-    config_path = await fetch_config()
-    
-    # 3. Run serve CLI
-    print(f"\n[3/3] Deploying service...")
-    run_serve_cli(config_path=config_path)
-
-
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("\n\n✓ Received interrupt signal, exiting...")
+    asyncio.run(main())
+
+     
+
+
+
+# CALLER="embedding_service"
+
+# # CONFIG_URL = r"C:\Users\hp\Downloads\Embedding\Embedding\Configuration_service\embed.yaml"
+# # LOCAL_CONFIG_PATH = "embed_runtime.yaml"  # Temporary local copy
+
+
+# async def fetch_config() -> dict:
+#     """Fetch configuration from config service (or local file)."""
+#     # For now, reading from local file
+#     # In production, you could fetch from a remote config service:
+#     # response = requests.get("http://config-service:8080/embed.yaml")
+#     # config = yaml.safe_load(response.text)
+    
+#     config_client = ConfigurationClient(caller=CALLER)
+#     await config_client.startup()
+#     config_path = await config_client.get_config_file("Embedding_Service")
+#     await config_client.shutdown()
+#     return config_path
+
+
+# def run_serve_cli(config_path: str):
+#     """Run 'serve run' CLI command with the config file."""
+    
+#     print(f"\nStarting Ray Serve with: serve run {config_path}")
+#     print("="*60)
+    
+#     try:
+#         # Run the serve command - this will block until interrupted
+#         # Use --blocking flag to keep the process running
+
+#         # cmd = ["serve", "deploy", config_path, "--blocking", "--app-dir", "."]
+#         # process=subprocess.run(cmd, check=True,stdout=sys.stdout,
+#         #     stderr=sys.stderr)
+
+#         process = subprocess.run(
+#             ["serve", "run", config_path],
+#             check=True,
+#             # Don't capture output - let it stream to console
+#             stdout=sys.stdout,
+#             stderr=sys.stderr
+#         )
+        
+#     except subprocess.CalledProcessError as e:
+#         print(f"\n✗ Serve command failed with exit code {e.returncode}")
+#         sys.exit(1)
+#     except KeyboardInterrupt:
+#         print("\n\n✓ Received interrupt signal, shutting down...")
+#         sys.exit(0)
+
+
+# async def main():
+#     print("="*60)
+#     print("Embedding Service Launcher")
+#     print("="*60)
+    
+#     # 1. Fetch configuration
+#     print("\n[1/3] Fetching configuration...")
+#     config_path = await fetch_config()
+    
+#     # 3. Run serve CLI
+#     print(f"\n[3/3] Deploying service...")
+#     run_serve_cli(config_path=config_path)
+
+
+# if __name__ == "__main__":
+#     try:
+#         asyncio.run(main())
+#     except KeyboardInterrupt:
+#         print("\n\n✓ Received interrupt signal, exiting...")
 
 
 

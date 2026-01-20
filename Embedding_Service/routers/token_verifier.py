@@ -3,7 +3,7 @@ import jwt
 import sys, os
 from fastapi import Depends
 from Embedding_Service.handlers.auth_handler import AuthenticationClient
-from Embedding_Service.handlers.handler_config_loader import ConfigLoader
+from Embedding_Service.handlers.handler_config_loader import HandlerConfigLoader
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 security = HTTPBearer(auto_error=True)
@@ -11,7 +11,7 @@ security = HTTPBearer(auto_error=True)
 ISSUER = "Auth_Service"
 AUDIENCE = "FE_Service"
 
-config_loader = ConfigLoader()
+config_loader = HandlerConfigLoader(service_name="Embedding", fetch_from_remote=True)
 auth_config = config_loader.get_config("Authentication")
 auth_client = AuthenticationClient(config=auth_config)
 
