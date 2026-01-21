@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 ISSUER = "Auth_Service"
 AUDIENCE = "FE_Service"
 security = HTTPBearer()
-config_loder = HandlerConfigLoader(service_name="Configuration", fetch_from_remote=True)
+config_loder = HandlerConfigLoader()
 auth_config = config_loder.get_config(config_key="Authentication")
 auth_client = AuthenticationClient(config=auth_config)
 

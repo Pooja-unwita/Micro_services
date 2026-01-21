@@ -7,7 +7,7 @@ from handlers.handler_config_loader import HandlerConfigLoader
 import asyncio
 from pathlib import Path
 
-loader_config = HandlerConfigLoader(service_name="dummy_service",fetch_from_remote=True)
+loader_config = HandlerConfigLoader()
 auth_config = loader_config.get_config(config_key="Authentication")
 embedding_config = loader_config.get_config(config_key="Embedding")
 

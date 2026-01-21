@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from handlers.handler_config_loader import HandlerConfigLoader
 from routers import auth
 
-handler_config_loader= HandlerConfigLoader(service_name="Authentication_service",fetch_from_remote=True)
+handler_config_loader= HandlerConfigLoader()
 handler_config = handler_config_loader.get_config(config_key="Authentication")
 
 

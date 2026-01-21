@@ -4,7 +4,7 @@ import jwt
 from datetime import datetime, timedelta, timezone
 import base64
 from cryptography.hazmat.primitives.asymmetric import rsa
-
+from models.models import JWKS  
 # this has to given as relative path from where the script is run
 KEYS = {
     "key-1": {
@@ -104,3 +104,25 @@ class JWTKeyManager:
             }
         except Exception as e:
             raise e
+    
+    async def jwks(self)-> JWKS:
+        """Expose the JSON Web Key Set (JWKS) endpoint."""
+        try:
+            jwks_keys = []
+            for kid, key in KEYS.items():
+                public_key = await self.load_public_key(key["public"])
+                jwks_keys.append(await self.public_key_to_jwk(public_key, kid))
+            return {"keys": jwks_keys}
+        except Exception as e:
+            raise e
+    
+    async def get_key_from_jwks(self, token: str):
+        """Retrieve the signing key from JWKS based on the token's KID."""
+        header = jwt.get_unverified_header(token)
+        kid = header["kid"]
+
+        jwks = await self.jwks()
+        for key in jwks["keys"]:
+            if key["kid"] == kid:
+                return jwt.algorithms.RSAAlgorithm.from_jwk(key)
+        raise Exception("Signing key not found")

@@ -11,7 +11,7 @@ security = HTTPBearer(auto_error=True)
 ISSUER = "Auth_Service"
 AUDIENCE = "FE_Service"
 
-config_loader = HandlerConfigLoader(service_name="Embedding", fetch_from_remote=True)
+config_loader = HandlerConfigLoader()
 auth_config = config_loader.get_config("Authentication")
 auth_client = AuthenticationClient(config=auth_config)
 

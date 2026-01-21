@@ -8,7 +8,7 @@ from Embedding_Service.handlers.config_handler import ConfigurationClient
 import os
 import time
 
-handler_loader = HandlerConfigLoader(service_name="Embedding", fetch_from_remote=True)
+handler_loader = HandlerConfigLoader()
 
 auth_client_configs = handler_loader.get_config(config_key="Authentication")
 config_client_configs = handler_loader.get_config(config_key="Configuration")

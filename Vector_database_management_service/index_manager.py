@@ -80,3 +80,45 @@ class IndexManager:
             await self.ctx.client.create_index(
                 self.ctx.collection_name, params
             )
+
+    async def is_loaded(self)-> str:
+        """Check if collection is loaded into memory asynchronously"""
+        try:
+            if not self.ctx.client:
+                await self.ctx.connect()
+        except Exception as e:
+            raise e
+        try:
+            loaded = await self.ctx.client.get_load_state(self.ctx.collection_name)
+            logger.info(f"Collection '{self.ctx.collection_name}' loaded status: {loaded}")
+            return loaded
+        except Exception as e:
+            logger.error(f"Failed to check if collection is loaded: {e}")
+            raise RuntimeError(f"Failed to check if collection is loaded: {e}")
+        
+    
+    async def load(self) -> bool:
+        """Load collection into memory asynchronously"""
+        try:
+            if not self.ctx.client:
+                await self.ctx.connect()
+        except Exception as e:
+            raise e
+        try:
+            await self.ctx.client.load_collection(self.ctx.collection_name)
+            logger.info(f"Collection '{self.ctx.collection_name}' loaded.")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to load collection: {e}")
+            raise RuntimeError(f"Failed to load collection: {e}")
+
+    async def release(self)-> None:
+        """Release collection from memory asynchronously"""
+        try:
+            if not self.ctx.client:
+                await self.ctx.connect()
+
+            await self.ctx.client.release_collection(self.ctx.collection_name)
+            logger.info(f"Collection '{self.ctx.collection_name}' released from memory.")
+        except Exception as e:
+            raise RuntimeError(f"Failed to release collection: {e}")

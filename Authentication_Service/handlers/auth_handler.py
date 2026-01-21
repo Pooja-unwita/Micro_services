@@ -2,7 +2,8 @@ import asyncio
 import threading
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Dict, Any
+import httpx
 import jwt
 import requests
 from utils.set_attribute import AttributeSetter
@@ -13,9 +14,7 @@ _token_expiry_context: ContextVar[Optional[datetime]] = ContextVar('token_expiry
 # Locks for preventing duplicate token requests within same context
 _token_lock = asyncio.Lock()
 
-# AUDIENCE = "my-service"
 AUDIENCE = "FE_Service"
-# jwks_client = jwt.PyJWKClient(JWKS_URL)
 
 from contextvars import ContextVar
 current_token = ContextVar('jwt_token')
@@ -24,17 +23,34 @@ class AuthenticationClient:
 
     def __init__(self, config:dict):
         AttributeSetter.set_attributes(self, config)
+        self.client: Optional[httpx.AsyncClient] = None
 
-    def jwt_client(self)-> jwt.PyJWKClient:
-        """
-        Returns a PyJWKClient instance for the JWKS endpoint.
-        """
+    async def startup(self):
         try:
-            JWKS_URL = f"{self.base_url}/.well-known/jwks.json"
-            jwks_client = jwt.PyJWKClient(JWKS_URL)
-            return jwks_client
+            if self.client is None:
+
+                self.client = httpx.AsyncClient(
+                                base_url=self.base_url,
+                                timeout=self.timeout,
+                                limits=httpx.Limits(
+                                    max_connections=self.http_limits["max_connections"],
+                                    max_keepalive_connections=self.http_limits["max_keepalive_connections"],
+                                ),
+                                headers=self.headers,
+                            )            
         except Exception as e:
             raise e
+
+
+    async def shutdown(self):
+        """Close the connection pool gracefully."""
+        try:
+            if self.client:
+                await self.client.aclose()
+                self.client = None
+        except Exception as e:
+            raise e
+
         
     async def get_token(self) -> str:
         """
@@ -81,12 +97,47 @@ class AuthenticationClient:
                 # Store token and expiry in THIS task's context
                 _token_context.set(token)
 
-                print(f"Obtained new token: {token[:25]}...")
+                print(f"Obtained token: {token[:25]}...")
                 return token
             except requests.exceptions.RequestException as e:
                 print(f"Failed to get token: {e}")
-                raise
+                raise e
 
+    
+    async def verify_token(self,token: str,audience: str,issuer: str,) -> Dict[str, Any]:
+        """
+        Verify a JWT token against the remote endpoint.
+        
+        Args:
+            token: JWT token to verify
+            audience: Expected audience claim
+            issuer: Expected issuer claim
+            
+        Returns:
+            Decoded token payload
+        """
+        url = f"{self.base_url}/verify-token"
+        headers = {
+                    **self.headers,
+                    "Authorization": f"Bearer {token}",
+                    }
+        payload = {
+            "AUDIENCE": audience,
+            "ISSUER": issuer,
+        }
+        try:
+            response = await self.client.post(
+                url,
+                json=payload,
+                headers=headers,
+            )
+            response.raise_for_status()
+            print("Token verified successfully.")
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            raise ValueError(f"Token verification failed: {e.response.text}")
+        except httpx.RequestError as e:
+            raise httpx.RequestError(f"Request failed: {e}")
 
         
     def clear_token(self):

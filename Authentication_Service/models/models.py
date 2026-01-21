@@ -26,3 +26,10 @@ class JWKS(BaseModel):
     Docstring for JWKS
     '''
     keys: List[JWK]
+
+
+class VeifyRequest(BaseModel):
+
+    ISSUER: str
+
+    AUDIENCE: str

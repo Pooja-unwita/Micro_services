@@ -19,11 +19,8 @@ class HandlerConfigLoader:
         
     ]
     def __init__(self, 
-                 service_name: str = None,
-                 default_config_path: Path = HANDLER_CONFIG_PATH,
-                 fetch_from_remote: bool = True,
-                 force_update: bool = False,
-                 check_updates: bool = True):
+                 
+                 default_config_path: Path = HANDLER_CONFIG_PATH):
         """
         Initialize ConfigLoader with bootstrap capability
         
@@ -34,9 +31,9 @@ class HandlerConfigLoader:
             force_update: If True, always fetch from remote (ignores local cache)
             check_updates: If True, check if remote version is newer than local
         """
-        self.service_name = service_name
+      
         self.default_config_path = default_config_path
-        self.fetch_from_remote = fetch_from_remote
+      
         
         try:
             # Local file exists
