@@ -3,7 +3,7 @@ from fastapi import FastAPI
 import logging
 
 from Vector_database_management_service.context import MilvusContext
-from vdb.services.collection_creator import CollectionCreator
+from Vector_database_management_service.collection_creator import CollectionCreator
 from Vector_database_management_service.index_manager import IndexManager
 from Vector_database_management_service.crud_operator import CrudOperator
 from Vector_database_management_service.search_operator import SearchOperator

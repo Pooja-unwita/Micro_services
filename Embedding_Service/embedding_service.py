@@ -13,15 +13,19 @@ def app_builder(args: dict[str, str]):
     """
     query = QueryVectorizer.bind(
         args["tei_url"],
-        args["query_annotation"]
+        args["tei_flag"],
+        args["custom_flag"],
+        args["custom_embed_model"],
+        args["query_annotation"],
+        args["device"]
     )
     text = TextVectorizer.bind(
         args["tei_url"],
         args["tei_flag"],
         args["custom_flag"],
         args["custom_embed_model"],
-        args["micro_batch_size"],
-        args["concurrency"]
+        args["concurrency"],
+        args["device"]
         
     )
     sparse = SparseVectorizer.bind(
@@ -35,3 +39,4 @@ def app_builder(args: dict[str, str]):
         sparse,
     )
     return embedd_app
+ 

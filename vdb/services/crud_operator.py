@@ -8,26 +8,26 @@ class CrudOperator:
     def __init__(self, ctx):
         self.ctx = ctx
 
-    async def insert(self, documents: List[Dict[str, Any]]) -> List[int]:
+    async def insert(self, collection_name: str, documents: List[Dict[str, Any]]) -> List[int]:
         await self.ctx.connect()
         if not documents:
             return []
 
         res = await self.ctx.client.insert(
-            self.ctx.collection_name, documents
+            collection_name, documents
         )
         return res.get("ids", [])
 
-    async def delete_by_ids(self, ids: List[int]) -> bool:
+    async def delete_by_ids(self, collection_name: str, ids: List[int]) -> bool:
         await self.ctx.connect()
         if not ids:
             return True
 
         expr = f"id in {ids}" if len(ids) > 1 else f"id == {ids[0]}"
-        await self.ctx.client.delete(self.ctx.collection_name, filter=expr)
+        await self.ctx.client.delete(collection_name, filter=expr)
         return True
     
-    async def delete_by_json_field(self,field_name: str,key: str,value: str) -> bool:
+    async def delete_by_json_field(self,collection_name: str, field_name: str,key: str,value: str) -> bool:
         """
         Delete entities based on a JSON field key-value pair.
         """
@@ -36,13 +36,13 @@ class CrudOperator:
         expr = f'{field_name}["{key}"] == "{value}"'
 
         await self.ctx.client.delete(
-            collection_name=self.ctx.collection_name,
+            collection_name=collection_name,
             filter=expr,
         )
         return True
 
 
-    async def delete_by_filename(self, filename: str, field_name) -> bool:
+    async def delete_by_filename(self, collection_name: str, filename: str, field_name) -> bool:
         """
         Delete entities where a VARCHAR field contains a given filename.
 
@@ -65,14 +65,14 @@ class CrudOperator:
         )
 
         await self.ctx.client.delete(
-            collection_name=self.ctx.collection_name,
+            collection_name=collection_name,
             filter=expr,
         )
 
         return True
 
 
-    async def delete_by_field_values(self, field_name: str, values: List[Union[int, str]]) -> bool:
+    async def delete_by_field_values(self, collection_name: str, field_name: str, values: List[Union[int, str]]) -> bool:
         """
         Delete entities by matching values on a scalar field.
 
@@ -101,16 +101,16 @@ class CrudOperator:
                 expr = f"{field_name} in {values}"
 
         await self.ctx.client.delete(
-            collection_name=self.ctx.collection_name,
+            collection_name=collection_name,
             filter=expr,
         )
 
         return True
 
 
-    async def drop_collection(self):
+    async def drop_collection(self, collection_name: str):
         await self.ctx.connect()
-        await self.ctx.client.drop_collection(self.ctx.collection_name)
+        await self.ctx.client.drop_collection(collection_name)
 
     async def list_collections(self) -> list:
         await self.ctx.connect()

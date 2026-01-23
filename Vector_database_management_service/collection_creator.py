@@ -63,7 +63,7 @@ class CollectionCreator:
             logger.error(f"Error while checking schema match: {e}")
             raise
 
-    async def create_schema(self, collection_name: str):
+    async def create_schema(self):
         try:
         
             schema_cfg = (
@@ -112,22 +112,21 @@ class CollectionCreator:
                 schema.add_function(fn)
 
             await self.ctx.client.create_collection(
-                collection_name, schema=schema
+                self.ctx.collection_name, schema=schema
             )
         except Exception as e:
             logger.error(f"Failed to create schema for collection:{e}")
             raise
 
-
-    async def create_or_verify_collection(self, index_manager, collection_name: str) -> bool:
+    async def create_or_verify_collection(self, index_manager):
         await self.ctx.connect()
 
-        if self.ctx.sync_client.has_collection(collection_name):
+        if self.ctx.sync_client.has_collection(self.ctx.collection_name):
             desc = self.ctx.sync_client.describe_collection(
-                collection_name
+                self.ctx.collection_name
             )
             schema_cfg = (
-                self.ctx.Hybrid_schema      
+                self.ctx.Hybrid_schema
                 if self.ctx.Hybrid_search_flag
                 else self.ctx.Schema
             )
@@ -137,7 +136,7 @@ class CollectionCreator:
                 raise RuntimeError("Schema mismatch")
 
         else:
-            await self.create_schema(collection_name)
+            await self.create_schema()
 
-        await index_manager.ensure_search_ready(collection_name=collection_name)
+        await index_manager.ensure_search_ready()
         

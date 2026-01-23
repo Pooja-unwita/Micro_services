@@ -22,7 +22,7 @@ async def main():
     await embedd_client.startup()
     
     text = "Helooooo"
-    embedding = await embedd_client.sparse_bm25(["hello"], token=token)
+    embedding = await embedd_client.dense_query(["hello"], token=token)
     print(len(embedding[0]))
 
 asyncio.run(main())

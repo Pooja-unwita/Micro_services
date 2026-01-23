@@ -104,41 +104,25 @@ class AuthenticationClient:
                 raise e
 
     
-    async def verify_token(self,token: str,audience: str,issuer: str,) -> Dict[str, Any]:
+    async def verify_token(self, token: str, audience: str, issuer: str) -> Dict[str, Any]:
         """
         Verify a JWT token against the remote endpoint.
-        
-        Args:
-            token: JWT token to verify
-            audience: Expected audience claim
-            issuer: Expected issuer claim
-            
-        Returns:
-            Decoded token payload
         """
         url = f"{self.base_url}/verify-token"
-        headers = {
-                    **self.headers,
-                    "Authorization": f"Bearer {token}",
-                    }
-        payload = {
-            "AUDIENCE": audience,
-            "ISSUER": issuer,
-        }
+        headers = {**self.headers, "Authorization": f"Bearer {token}"}
+        payload = {"AUDIENCE": audience, "ISSUER": issuer}
+        
         try:
-            response = await self.client.post(
-                url,
-                json=payload,
-                headers=headers,
-            )
+            response = await self.client.post(url, json=payload, headers=headers)
             response.raise_for_status()
-            print("Token verified successfully.")
+            print("Token verified successfully")
             return response.json()
         except httpx.HTTPStatusError as e:
+            print(f"Token verification failed: {e.response.text}")
             raise ValueError(f"Token verification failed: {e.response.text}")
         except httpx.RequestError as e:
-            raise httpx.RequestError(f"Request failed: {e}")
-
+            print(f"Request failed: {e}")
+            raise
         
     def clear_token(self):
         """Clear cached token (useful for logout/refresh scenarios)."""

@@ -28,7 +28,7 @@ class JWKS(BaseModel):
     keys: List[JWK]
 
 
-class VeifyRequest(BaseModel):
+class VerifyRequest(BaseModel):
 
     ISSUER: str
 

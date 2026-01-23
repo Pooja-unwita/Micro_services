@@ -1,46 +1,35 @@
-
 import jwt
 import sys, os
-from fastapi import Depends
+from fastapi import HTTPException
 from Embedding_Service.handlers.auth_handler import AuthenticationClient
 from Embedding_Service.handlers.handler_config_loader import HandlerConfigLoader
+from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import logging
 
-security = HTTPBearer(auto_error=True)
-#"torch>=2.9.1"
+logger = logging.getLogger(__name__)
+
 ISSUER = "Auth_Service"
 AUDIENCE = "FE_Service"
-
-config_loader = HandlerConfigLoader()
-auth_config = config_loader.get_config("Authentication")
+security = HTTPBearer()
+config_loder = HandlerConfigLoader()
+auth_config = config_loder.get_config(config_key="Authentication")
 auth_client = AuthenticationClient(config=auth_config)
 
-
-
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security),)->dict: # need to remove some lines like unverified_header
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     """
-    Verifies the JWT token using the public keys from the JWKS endpoint.
+    Verifies the JWT token with the auth service.
     """
     token = credentials.credentials
     try:
-        import json
-        unverified_header = jwt.get_unverified_header(token)
-        jwks_client = auth_client.jwt_client()
-        signing_key = jwks_client.get_signing_key_from_jwt(token)
-
-        # key_data = signing_key.key
-        # print("\n--- Signing Key Found ---")
-        # print(f"Key details: {key_data}")
-
-        payload = jwt.decode(
-            token,
-            signing_key.key,
-            algorithms=["RS256"],
-            audience=AUDIENCE,
+        await auth_client.startup()
+        payload = await auth_client.verify_token(
+            token=token,
             issuer=ISSUER,
+            audience=AUDIENCE
         )
         return payload
     except Exception as e:
-        raise Exception (f"Token verification failed: {e}")
-        # print(f"Token verification failed: {e}")
-        # return None
+        logger.error(f"Token verification failed: {e}")
+        raise HTTPException(status_code=401, detail="Unauthorized")
+ 

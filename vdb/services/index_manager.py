@@ -6,23 +6,23 @@ class IndexManager:
     def __init__(self, ctx):
         self.ctx = ctx
 
-    async def has_index(self) -> dict | None:
+    async def has_index(self, collection_name:str) -> dict | None:
         await self.ctx.connect()
-        indexes = await self.ctx.client.list_indexes(self.ctx.collection_name)
+        indexes = await self.ctx.client.list_indexes(collection_name)
         if not indexes:
             return None
 
         result = {}
         for idx in indexes:
             desc = await self.ctx.client.describe_index(
-                self.ctx.collection_name, idx
+                collection_name, idx
             )
             result[idx] = desc["index_type"]
         return result
 
-    async def parameters_match(self, field_name: str) -> bool:
+    async def parameters_match(self, field_name: str, collection_name: str) -> bool:
         desc = await self.ctx.client.describe_index(
-            self.ctx.collection_name, field_name
+            collection_name, field_name
         )
         for cfg in self.ctx.index_config_list:
             if cfg["index_type"] == desc["index_type"]:
@@ -34,9 +34,9 @@ class IndexManager:
                 )
         return False
 
-    async def ensure_indexes(self):
+    async def ensure_indexes(self, collection_name: str) -> None:
         await self.ctx.connect()
-        existing = await self.has_index() or {}
+        existing = await self.has_index(collection_name) or {}
 
         schema = (
             self.ctx.Hybrid_schema
@@ -50,7 +50,7 @@ class IndexManager:
             name = field["name"]
             dtype = field["dtype"]
 
-            if name in existing and await self.parameters_match(name):
+            if name in existing and await self.parameters_match(name, collection_name):
                 continue
 
             if name in existing:
@@ -76,22 +76,22 @@ class IndexManager:
 
         if params:
             await self.ctx.client.create_index(
-                self.ctx.collection_name, params
+                collection_name, params
             )
 
-    async def drop_index(self,field_name: str)->None:
+    async def drop_index(self,field_name: str, collection_name: str)->None:
         """Drop index asynchronously"""
         try:
             if not self.ctx.client:
                 await self.ctx.connect()
-            await self.release()
-            await self.ctx.client.drop_index(self.ctx.collection_name, field_name)
+            await self.release(collection_name=collection_name)
+            await self.ctx.client.drop_index(collection_name, field_name)
             logger.info(f"Index on '{field_name}' dropped.")
         except Exception as e:
             raise RuntimeError(f"Failed to drop index: {e}")
 
 
-    async def is_loaded(self)-> str:
+    async def is_loaded(self, collection_name: str)-> str:
         """Check if collection is loaded into memory asynchronously"""
         try:
             if not self.ctx.client:
@@ -99,19 +99,19 @@ class IndexManager:
         except Exception as e:
             raise e
         try:
-            loaded = await self.ctx.client.get_load_state(self.ctx.collection_name)
-            logger.info(f"Collection '{self.ctx.collection_name}' loaded status: {loaded}")
+            loaded = await self.ctx.client.get_load_state(collection_name)
+            logger.info(f"Collection '{collection_name}' loaded status: {loaded}")
             return loaded
         except Exception as e:
             logger.error(f"Failed to check if collection is loaded: {e}")
             raise RuntimeError(f"Failed to check if collection is loaded: {e}")
 
-    async def ensure_search_ready(self):
-        await self.ensure_indexes()
-        if not await self.is_loaded():
-            await self.load()
-    
-    async def load(self) -> bool:
+    async def ensure_search_ready(self, collection_name: str):
+        await self.ensure_indexes(collection_name)
+        if not await self.is_loaded(collection_name):
+            await self.load(collection_name)
+
+    async def load(self, collection_name: str) -> bool:
         """Load collection into memory asynchronously"""
         try:
             if not self.ctx.client:
@@ -119,20 +119,20 @@ class IndexManager:
         except Exception as e:
             raise e
         try:
-            await self.ctx.client.load_collection(self.ctx.collection_name)
-            logger.info(f"Collection '{self.ctx.collection_name}' loaded.")
+            await self.ctx.client.load_collection(collection_name)
+            logger.info(f"Collection '{collection_name}' loaded.")
             return True
         except Exception as e:
             logger.error(f"Failed to load collection: {e}")
             raise RuntimeError(f"Failed to load collection: {e}")
 
-    async def release(self)-> None:
+    async def release(self, collection_name: str)-> None:
         """Release collection from memory asynchronously"""
         try:
             if not self.ctx.client:
                 await self.ctx.connect()
 
-            await self.ctx.client.release_collection(self.ctx.collection_name)
-            logger.info(f"Collection '{self.ctx.collection_name}' released from memory.")
+            await self.ctx.client.release_collection(collection_name)
+            logger.info(f"Collection '{collection_name}' released from memory.")
         except Exception as e:
             raise RuntimeError(f"Failed to release collection: {e}")
