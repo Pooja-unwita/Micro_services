@@ -1,15 +1,15 @@
 from ray import serve
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 import logging
 from numpy import ndarray
-from vdb.models.models import SearchInput, SearchNamedCollectionInput, DeleteByFilenameInput
+from vdb.models.models import SearchInput, SearchNamedCollectionInput, DeleteByFilenameInput,InsertResponse
 from vdb.services.context import MilvusContext
 from vdb.services.collection_creator import CollectionCreator
 from vdb.services.index_manager import IndexManager
 from vdb.services.crud_operator import CrudOperator
 from vdb.services.search_operator import SearchOperator
-
-
+from vdb.routers.token_verifier import verify_token
+from vdb.models.models import CreateCollectionResponse, DropcollectionResponse, DeleteByFilenameResponse
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Milvus Vector Service")
@@ -28,20 +28,19 @@ class MilvusService:
         self.crud = CrudOperator(self.ctx)
         self.search = SearchOperator(self.ctx, self.index_manager)
 
-    @app.post("/create_collection")   
-    async def create_collection(self) -> bool:        
+    @app.post("/create_collection",response_model=CreateCollectionResponse)   
+    async def create_collection(self, token: dict = Depends(verify_token)) -> dict:        
         return await self.collection_creator.create_or_verify_collection(collection_name=self.ctx.collection_name, index_manager=self.index_manager)
     
 
-    @app.post("/create_collection/{collection_name}")
-    async def create_named_collection(self, collection_name: str) -> bool:
+    @app.post("/create_collection/{collection_name}",response_model=CreateCollectionResponse)
+    async def create_named_collection(self, collection_name: str, token: dict = Depends(verify_token)) -> bool:
         try:
             return await self.collection_creator.create_or_verify_collection(collection_name=collection_name, index_manager=self.index_manager)
         except RuntimeError as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-    
 
     @app.delete("/drop_collection", response_model=bool)
     async def drop_collection(self) -> bool:
@@ -50,7 +49,6 @@ class MilvusService:
         await self.crud.drop_collection(collection_name=self.ctx.collection_name)
         if await self.collection_creator.has_collection(collection_name=self.ctx.collection_name):
             raise HTTPException(status_code=500, detail="Failed to drop collection")
-        
         return True
 
     @app.delete("/drop_collection/{collection_name}", response_model=bool)
@@ -61,11 +59,9 @@ class MilvusService:
                 raise HTTPException(status_code=500, detail="Failed to drop collection")
             return True
         else:
-            raise HTTPException(status_code=404, detail="Collection not found")
-    
-
-    @app.post("/insert_documents")
-    async def insert_documents(self, documents: list[dict]) -> list:
+            raise HTTPException(status_code=404, detail="Collection not found")        
+    @app.post("/insert_documents", response_model=InsertResponse)
+    async def insert_documents(self, documents: list[dict] , token: dict = Depends(verify_token)) -> list:
        
         if await self.collection_creator.has_collection(collection_name=self.ctx.collection_name):
             print("Inserting documents into collection:", self.ctx.collection_name)
@@ -79,8 +75,8 @@ class MilvusService:
             raise HTTPException(status_code=404, detail="Collection not found")
 
 
-    @app.post("/insert_documents/{collection_name}")
-    async def insert_documents_named_collection(self, collection_name: str, documents: list[dict]) -> list:
+    @app.post("/insert_documents/{collection_name}", response_model=InsertResponse)
+    async def insert_documents_named_collection(self, collection_name: str, documents: list[dict], token: dict = Depends(verify_token)) -> list:
         if not await self.collection_creator.has_collection(collection_name=collection_name):
             raise HTTPException(status_code=404, detail="Collection not found")
         index_list = await self.index_manager.index_list(collection_name=collection_name)
@@ -90,7 +86,7 @@ class MilvusService:
         return await self.crud.insert(collection_name=collection_name, documents=documents)
 
     @app.post("/search", response_model=None)
-    async def search(self, search_input: SearchInput) -> list:
+    async def search(self, search_input: SearchInput, token: dict = Depends(verify_token)) -> list:
         # Check if collection exists
         if not await self.collection_creator.has_collection(collection_name=self.ctx.collection_name):
             raise HTTPException(status_code=404, detail="Collection not found")
@@ -119,7 +115,7 @@ class MilvusService:
         )
 
     @app.post("/search/{collection_name}", response_model=None)
-    async def search_named_collection(self, search_input: SearchNamedCollectionInput) -> list:
+    async def search_named_collection(self, search_input: SearchNamedCollectionInput, token: dict = Depends(verify_token)) -> list:
         # Check if collection exists
         if not await self.collection_creator.has_collection(collection_name=search_input.collection_name):
             raise HTTPException(status_code=404, detail="Collection not found")
@@ -148,29 +144,29 @@ class MilvusService:
         )  
     
     @app.delete("/delete_by_ids")
-    async def delete_by_ids(self, ids: list) -> bool:
+    async def delete_by_ids(self, ids: list, token: dict = Depends(verify_token)) -> bool:
         if not await self.collection_creator.has_collection(collection_name=self.ctx.collection_name):
             raise HTTPException(status_code=404, detail="Collection not found")   
         return await self.crud.delete_by_ids(collection_name=self.ctx.collection_name, ids=ids)    
 
 
     @app.delete("/delete_by_ids/{collection_name}")
-    async def delete_by_ids_named_collection(self, collection_name: str, ids: list) -> bool:   
+    async def delete_by_ids_named_collection(self, collection_name: str, ids: list, token: dict = Depends(verify_token)) -> bool:   
         if not await self.collection_creator.has_collection(collection_name=collection_name):
             raise HTTPException(status_code=404, detail="Collection not found")
         return await self.crud.delete_by_ids(collection_name=collection_name, ids=ids)    
 
 
-    @app.delete("/delete_by_filename")
+    @app.delete("/delete_by_filename",response_model=DeleteByFilenameResponse)
     # async def delete_by_filename(self,payload: DeleteByFilenameInput) -> bool  : 
-    async def delete_by_filename(self,filename:str, field_name: str = "metadata") -> dict  :
+    async def delete_by_filename(self,filename:str, field_name: str = "metadata", token: dict = Depends(verify_token)) -> dict  :
         if not await self.collection_creator.has_collection(collection_name=self.ctx.collection_name):
             raise HTTPException(status_code=404, detail="Collection not found")  
         return await self.crud.delete_by_filename(collection_name=self.ctx.collection_name, filename=filename, field_name=field_name)
     
 
-    @app.delete("/delete_by_filename/{collection_name}")
-    async def delete_by_filename_named_collection(self, collection_name: str, filename: str, field_name: str) -> dict  :  
+    @app.delete("/delete_by_filename/{collection_name}",response_model=DeleteByFilenameResponse)
+    async def delete_by_filename_named_collection(self, collection_name: str, filename: str, field_name: str, token: dict = Depends(verify_token)) -> bool  :  
         if not await self.collection_creator.has_collection(collection_name=collection_name):
             raise HTTPException(status_code=404, detail="Collection not found") 
         return await self.crud.delete_by_filename(collection_name=collection_name, filename=filename, field_name=field_name)

@@ -1,3 +1,4 @@
+from http.client import HTTPException
 import logging
 from typing import List, Dict, Any, Union
 
@@ -16,7 +17,8 @@ class CrudOperator:
         res = await self.ctx.client.insert(
             collection_name=collection_name, data=documents
         )
-        return res.get("ids", [])
+        res["file_name"] = "dummy"
+        return res
 
     async def delete_by_ids(self, collection_name: str, ids: List[int]) -> bool:
         await self.ctx.connect()
@@ -68,7 +70,7 @@ class CrudOperator:
             filter=expr,
         )
         print(delete_count)
-        return delete_count
+        return {"filename": filename, "deleted_count": delete_count.get("deleted_count"), "cost": delete_count.get("cost")}
 
 
     # async def delete_by_field_values(self, collection_name: str, field_name: str, values: List[Union[int, str]]) -> bool:
@@ -105,13 +107,10 @@ class CrudOperator:
     #     )
 
     #     return True
-
-
     async def drop_collection(self, collection_name: str):
-        await self.ctx.connect()
-        print("Dropping Collection:", collection_name)
-        dropped =await self.ctx.client.drop_collection(collection_name)
-        print("Drop Collection Result:", dropped)
-        return dropped
+            await self.ctx.connect()
+            print("Dropping Collection:", collection_name)
+            dropped =await self.ctx.client.drop_collection(collection_name)
+            print("Drop Collection Result:", dropped)
+            return dropped
 
-    

@@ -119,7 +119,7 @@ class CollectionCreator:
             raise
 
 
-    async def create_or_verify_collection(self, index_manager, collection_name: str) -> bool:
+    async def create_or_verify_collection(self, index_manager, collection_name: str) -> dict:
         await self.ctx.connect()
         try:
             if self.ctx.sync_client.has_collection(collection_name):
@@ -131,16 +131,20 @@ class CollectionCreator:
                     if self.ctx.Hybrid_search_flag
                     else self.ctx.Schema
                 )
+
                 if not await self.check_schema_match(
                     desc["fields"], schema_cfg["fields"]
                 ):
                     raise RuntimeError("Schema mismatch")
+                status = "verified"
 
             else:
                 await self.create_schema(collection_name)
             
             await index_manager.ensure_search_ready(collection_name=collection_name)
-            return True
+            status = "created"
+            return {"collection_name": collection_name, "status": status}
+            # return True
         except Exception as e:
             logger.error(f"Failed to create or verify collection: {e}")
             raise RuntimeError(f"Failed to create or verify collection: {e}")

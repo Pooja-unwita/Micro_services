@@ -9,6 +9,7 @@ Authentication:
   http_limits:
     max_connections: 100
     max_keepalive_connections: 20
+
 Embedding:
   base_url: http://localhost:8004/embed
   max_concurrency: 50
@@ -19,6 +20,7 @@ Embedding:
   http_limits:
     max_connections: 100
     max_keepalive_connections: 20
+    
 Configuration:
   base_url: http://localhost:9000
   workers: 1
