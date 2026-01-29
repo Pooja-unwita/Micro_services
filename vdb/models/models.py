@@ -33,7 +33,7 @@ class DeleteByFilenameInput(BaseModel):
 
 class DeleteByFilenameResponse(BaseModel):
     filename: str
-    deleted_count: int
+    delete_count: int 
     cost: float
 
 class InsertResponse(BaseModel):

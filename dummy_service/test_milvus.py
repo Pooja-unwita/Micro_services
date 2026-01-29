@@ -100,15 +100,6 @@ async def test_parallel_operations():
 
     await vdb_handler.shutdown()
 
-if __name__ == "__main__":    
-    import asyncio
-    # asyncio.run(test_create_collection())
-    asyncio.run(test_parallel_operations())
-    # asyncio.run(test_delete_by_filename())
-    # asyncio.run(test_drop_collection())
-
-import asyncio
-
 
 async def simulate_user(user_id: int):
     async with semaphore:
@@ -129,7 +120,7 @@ async def simulate_user(user_id: int):
 
         delete_task = asyncio.create_task(
             vdb_handler.delete_documents_by_filename(
-                filename="parallel_2",
+                filename="example",
                 field_name="metadata",
                 token=token
             )
@@ -181,7 +172,7 @@ if __name__ == "__main__":
     import asyncio
 
     #asyncio.run(test_concurrent_users(user_count=10))
-    asyncio.run(test_drop_collection())
-    #asyncio.run(test_parallel_operations())
-    #asyncio.run(test_create_collection())
+    #asyncio.run(test_drop_collection())
+    asyncio.run(test_parallel_operations())
+    asyncio.run(test_create_collection())
     #asyncio.run(test_delete_by_filename())

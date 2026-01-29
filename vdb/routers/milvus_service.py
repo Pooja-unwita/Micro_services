@@ -59,7 +59,8 @@ class MilvusService:
                 raise HTTPException(status_code=500, detail="Failed to drop collection")
             return True
         else:
-            raise HTTPException(status_code=404, detail="Collection not found")        
+            raise HTTPException(status_code=404, detail="Collection not found")   
+             
     @app.post("/insert_documents", response_model=InsertResponse)
     async def insert_documents(self, documents: list[dict] , token: dict = Depends(verify_token)) -> list:
        

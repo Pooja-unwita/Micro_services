@@ -69,8 +69,7 @@ class CrudOperator:
             collection_name=collection_name,
             filter=expr,
         )
-        print(delete_count)
-        return {"filename": filename, "deleted_count": delete_count.get("deleted_count"), "cost": delete_count.get("cost")}
+        return {"filename": filename, "delete_count": delete_count.get("delete_count"), "cost": delete_count.get("cost")}
 
 
     # async def delete_by_field_values(self, collection_name: str, field_name: str, values: List[Union[int, str]]) -> bool:
@@ -112,5 +111,6 @@ class CrudOperator:
             print("Dropping Collection:", collection_name)
             dropped =await self.ctx.client.drop_collection(collection_name)
             print("Drop Collection Result:", dropped)
-            return dropped
+            #return dropped
+            return {"collection_name": collection_name, "status": "dropped"}
 

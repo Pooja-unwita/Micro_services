@@ -245,24 +245,12 @@ class VDBHandler:
 
     async def create_named_collection(self, collection_name: str, token: str):
         try:
-<<<<<<< Updated upstream
-            response = await self.client.delete("/drop_collection")
-            response.raise_for_status()
-            print(response)
-            print(response.json())
-            return response.json()
-        except httpx.HTTPError as e:
-            raise RuntimeError(f"Failed to drop collection: {e}")
-        
-    async def drop_named_collection(self, collection_name: str):
-=======
             response = await self._post(f"/create_collection/{collection_name}", {}, token)
             return response
         except RuntimeError as e:
             raise RuntimeError(f"Failed to create collection '{collection_name}': {e}") from e
 
     async def drop_collection(self, token: str):
->>>>>>> Stashed changes
         try:
             if not self.client:
                 await self.startup()
