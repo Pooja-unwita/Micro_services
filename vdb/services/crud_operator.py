@@ -14,7 +14,7 @@ class CrudOperator:
             return []
 
         res = await self.ctx.client.insert(
-            collection_name, documents
+            collection_name=collection_name, data=documents
         )
         return res.get("ids", [])
 
@@ -42,7 +42,7 @@ class CrudOperator:
         return True
 
 
-    async def delete_by_filename(self, collection_name: str, filename: str, field_name) -> bool:
+    async def delete_by_filename(self, collection_name: str, filename: str, field_name) -> str:
         """
         Delete entities where a VARCHAR field contains a given filename.
 
@@ -55,63 +55,60 @@ class CrudOperator:
         await self.ctx.connect()
 
         if not field_name or not filename:
-            return True
+            raise ValueError("Both field_name and filename must be provided.")
 
         # Escape quotes defensively
         safe_filename = filename.replace('"', '\\"')
 
-        expr = (
-            f'{field_name} like "%\\"filename\\":\\"{safe_filename}\\""'
-        )
-
-        await self.ctx.client.delete(
+        expr = f'{field_name} like \'%"filename": "{safe_filename}"%\''
+        print("Delete Expression:", expr)
+        print("Collection Name:", collection_name)
+        delete_count =await self.ctx.client.delete(
             collection_name=collection_name,
             filter=expr,
         )
+        print(delete_count)
+        return delete_count
 
-        return True
 
+    # async def delete_by_field_values(self, collection_name: str, field_name: str, values: List[Union[int, str]]) -> bool:
+    #     """
+    #     Delete entities by matching values on a scalar field.
 
-    async def delete_by_field_values(self, collection_name: str, field_name: str, values: List[Union[int, str]]) -> bool:
-        """
-        Delete entities by matching values on a scalar field.
+    #     Examples:
+    #         delete_by_field_values("id", [1, 2, 3])
+    #         delete_by_field_values("user_id", [10])
+    #         delete_by_field_values("filename", ["a.pdf", "b.pdf"])
+    #     """
+    #     await self.ctx.connect()
 
-        Examples:
-            delete_by_field_values("id", [1, 2, 3])
-            delete_by_field_values("user_id", [10])
-            delete_by_field_values("filename", ["a.pdf", "b.pdf"])
-        """
-        await self.ctx.connect()
+    #     if not field_name or not values:
+    #         return True
 
-        if not field_name or not values:
-            return True
+    #     if len(values) == 1:
+    #         value = values[0]
+    #         if isinstance(value, str):
+    #             value = value.replace('"', '\\"')
+    #             expr = f'{field_name} == "{value}"'
+    #         else:
+    #             expr = f"{field_name} == {value}"
+    #     else:
+    #         if isinstance(values[0], str):
+    #             escaped = [f'"{v.replace(chr(34), "\\\"")}"' for v in values]
+    #             expr = f"{field_name} in [{', '.join(escaped)}]"
+    #         else:
+    #             expr = f"{field_name} in {values}"
 
-        if len(values) == 1:
-            value = values[0]
-            if isinstance(value, str):
-                value = value.replace('"', '\\"')
-                expr = f'{field_name} == "{value}"'
-            else:
-                expr = f"{field_name} == {value}"
-        else:
-            if isinstance(values[0], str):
-                escaped = [f'"{v.replace(chr(34), "\\\"")}"' for v in values]
-                expr = f"{field_name} in [{', '.join(escaped)}]"
-            else:
-                expr = f"{field_name} in {values}"
+    #     await self.ctx.client.delete(
+    #         collection_name=collection_name,
+    #         filter=expr,
+    #     )
 
-        await self.ctx.client.delete(
-            collection_name=collection_name,
-            filter=expr,
-        )
-
-        return True
+    #     return True
 
 
     async def drop_collection(self, collection_name: str):
         await self.ctx.connect()
         await self.ctx.client.drop_collection(collection_name)
 
-    async def list_collections(self) -> list:
-        await self.ctx.connect()
-        return await self.ctx.client.list_collections()
+    

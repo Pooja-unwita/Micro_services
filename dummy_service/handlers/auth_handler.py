@@ -81,15 +81,22 @@ class AuthenticationClient:
                     "scope": ["read:data", "write:data"],
                     "aud": AUDIENCE
                 }
-                loop = asyncio.get_event_loop()
-                response = await loop.run_in_executor(
-                    None,
-                    lambda: requests.post(
-                        f"{self.base_url}/token",
-                        json=token_request_payload,
-                        timeout=self.timeout, 
-                        headers=self.headers
-                    )
+                if not self.client:
+                    raise RuntimeError("HTTP client not initialized. Call startup() first.")
+                # response = await loop.run_in_executor(
+                #     None,
+                #     lambda: requests.post(
+                #         f"{self.base_url}/token",
+                #         json=token_request_payload,
+                #         timeout=self.timeout, 
+                #         headers=self.headers
+                #     )
+                # )
+                response = await self.client.post(
+                    "/token",
+                    json=token_request_payload,
+                    timeout=self.timeout, 
+                    headers=self.headers
                 )
                 response.raise_for_status()
                 token = response.json()["access_token"]
@@ -97,7 +104,6 @@ class AuthenticationClient:
                 # Store token and expiry in THIS task's context
                 _token_context.set(token)
 
-                print(f"Obtained token: {token[:25]}...")
                 return token
             except requests.exceptions.RequestException as e:
                 print(f"Failed to get token: {e}")

@@ -6,7 +6,7 @@ class IndexManager:
     def __init__(self, ctx):
         self.ctx = ctx
 
-    async def has_index(self, collection_name:str) -> dict | None:
+    async def index_list(self, collection_name:str) -> dict | None:
         await self.ctx.connect()
         indexes = await self.ctx.client.list_indexes(collection_name)
         if not indexes:
@@ -36,7 +36,7 @@ class IndexManager:
 
     async def ensure_indexes(self, collection_name: str) -> None:
         await self.ctx.connect()
-        existing = await self.has_index(collection_name) or {}
+        existing = await self.index_list(collection_name) or {}
 
         schema = (
             self.ctx.Hybrid_schema
@@ -96,19 +96,33 @@ class IndexManager:
         try:
             if not self.ctx.client:
                 await self.ctx.connect()
-        except Exception as e:
-            raise e
-        try:
             loaded = await self.ctx.client.get_load_state(collection_name)
+            
+            state = loaded["state"].name
+        
+            if state == "Loaded":
+                return True
+
+                logger.info(f"Collection '{collection_name}' is loaded in memory.")
+            else:
+                return False
             logger.info(f"Collection '{collection_name}' loaded status: {loaded}")
             return loaded
+        
+        # except Exception as e:
+        #     raise e
+        #     loaded = await self.ctx.client.get_load_state(collection_name)
+        #     logger.info(f"Collection '{collection_name}' loaded status: {loaded}")
+        #     return loaded
         except Exception as e:
             logger.error(f"Failed to check if collection is loaded: {e}")
             raise RuntimeError(f"Failed to check if collection is loaded: {e}")
 
     async def ensure_search_ready(self, collection_name: str):
         await self.ensure_indexes(collection_name)
+        
         if not await self.is_loaded(collection_name):
+           
             await self.load(collection_name)
 
     async def load(self, collection_name: str) -> bool:
@@ -120,6 +134,7 @@ class IndexManager:
             raise e
         try:
             await self.ctx.client.load_collection(collection_name)
+           
             logger.info(f"Collection '{collection_name}' loaded.")
             return True
         except Exception as e:

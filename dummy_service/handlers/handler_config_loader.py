@@ -14,7 +14,8 @@ class HandlerConfigLoader:
     CONFIG_KEYS: List[str] = [
         "Embedding",
         "Authentication",
-        "Configuration"
+        "Configuration",
+        "Milvus_Vector_Database",
         
     ]
     def __init__(self, 

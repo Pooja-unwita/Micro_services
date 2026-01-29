@@ -12,7 +12,7 @@ class SearchOperator:
         await self.ctx.connect()
         top_k = top_k or self.ctx.top_k
 
-        index_map = await self.index_manager.has_index(collection_name)
+        index_map = await self.index_manager.index_list(collection_name)
         index_type = index_map[self.ctx.ann_field]
 
         cfg = next(
@@ -34,7 +34,7 @@ class SearchOperator:
         await self.ctx.connect()
         top_k = top_k or self.ctx.top_k
 
-        index_map = await self.index_manager.has_index(collection_name)
+        index_map = await self.index_manager.index_list(collection_name)
         reqs = []
 
         for field in self.ctx.Hybrid_search["annn_fields"]:
@@ -61,7 +61,17 @@ class SearchOperator:
             output_fields=self.ctx.output_fields,
         )
 
-    async def search(self,collection_name:str, dense_vecs, sparse_vec=None, **kwargs):
+    async def search(self, collection_name: str, dense_vecs, sparse_vec=None, top_k=None, filter_expr=None):
         if self.ctx.Hybrid_search_flag:
-            return await self.hybrid_search(dense_vecs=dense_vecs, sparse_vec=sparse_vec, collection_name=collection_name, **kwargs)
-        return await self.dense_search(vectors=dense_vecs, collection_name=collection_name, **kwargs)
+            return await self.hybrid_search(
+                dense_vecs=dense_vecs,
+                sparse_vec=sparse_vec,
+                collection_name=collection_name,
+                top_k=top_k
+            )
+        return await self.dense_search(
+            vectors=dense_vecs,
+            collection_name=collection_name,
+            top_k=top_k,
+            filter_expr=filter_expr
+        )

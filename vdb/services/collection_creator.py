@@ -121,23 +121,35 @@ class CollectionCreator:
 
     async def create_or_verify_collection(self, index_manager, collection_name: str) -> bool:
         await self.ctx.connect()
+        try:
+            if self.ctx.sync_client.has_collection(collection_name):
+                desc = self.ctx.sync_client.describe_collection(
+                    collection_name
+                )
+                schema_cfg = (
+                    self.ctx.Hybrid_schema      
+                    if self.ctx.Hybrid_search_flag
+                    else self.ctx.Schema
+                )
+                if not await self.check_schema_match(
+                    desc["fields"], schema_cfg["fields"]
+                ):
+                    raise RuntimeError("Schema mismatch")
 
-        if self.ctx.sync_client.has_collection(collection_name):
-            desc = self.ctx.sync_client.describe_collection(
-                collection_name
-            )
-            schema_cfg = (
-                self.ctx.Hybrid_schema      
-                if self.ctx.Hybrid_search_flag
-                else self.ctx.Schema
-            )
-            if not await self.check_schema_match(
-                desc["fields"], schema_cfg["fields"]
-            ):
-                raise RuntimeError("Schema mismatch")
-
-        else:
-            await self.create_schema(collection_name)
-
-        await index_manager.ensure_search_ready(collection_name=collection_name)
+            else:
+                await self.create_schema(collection_name)
+            
+            await index_manager.ensure_search_ready(collection_name=collection_name)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to create or verify collection: {e}")
+            raise RuntimeError(f"Failed to create or verify collection: {e}")
         
+    async def has_collection(self, collection_name: str) -> bool:
+        await self.ctx.connect()
+        return self.ctx.sync_client.has_collection(collection_name)
+    
+    
+    async def list_collections(self) -> list:
+        await self.ctx.connect()
+        return await self.ctx.client.list_collections()

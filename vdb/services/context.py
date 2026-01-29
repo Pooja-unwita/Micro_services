@@ -28,6 +28,8 @@ class MilvusContext:
                 uri=f"http://{self.host}:{self.port}"
             )
             logger.info("Connected to Milvus")
+     
+            
 
     def with_collection(self, collection_name: str):
         new_ctx = copy.copy(self)
