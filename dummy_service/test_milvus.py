@@ -47,7 +47,52 @@ async def test_search():
     print("Search Named Collection Result:", result_named)
     await vdb_handler.shutdown()
 
+async def test_parallel_operations():
+    await vdb_handler.startup()
+
+    insert_task = vdb_handler.insert_documents(
+        documents=[
+            {
+                "chunks": "parallel hello",
+                "vectors": [0.4] * 1024,
+                "metadata": '{"filename": "parallel_1"}'
+            },
+            {
+                "chunks": "parallel world",
+                "vectors": [0.5] * 1024,
+                "metadata": '{"filename": "parallel_2"}'
+            }
+        ]
+    )
+
+    delete_task = vdb_handler.delete_documents_by_filename(
+        filename="lorem",
+        field_name="metadata"
+    )
+
+    search_task = vdb_handler.search(
+        dense_vecs=[[0.1] * 1024]
+    )
+
+    results = await asyncio.gather(
+        insert_task,
+        delete_task,
+        search_task,
+        return_exceptions=True
+    )
+
+    for i, result in enumerate(results, 1):
+        if isinstance(result, Exception):
+            print(f"Task {i} failed:", result)
+        else:
+            print(f"Task {i} result:", result)
+
+    await vdb_handler.shutdown()
+
 if __name__ == "__main__":    
     import asyncio
-    asyncio.run(test_create_collection())
-    asyncio.run(test_delete_by_filename())
+    # asyncio.run(test_create_collection())
+    asyncio.run(test_parallel_operations())
+    # asyncio.run(test_delete_by_filename())
+    # asyncio.run(test_drop_collection())
+

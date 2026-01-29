@@ -54,6 +54,8 @@ class VDBHandler:
         try:
             response = await self.client.delete("/drop_collection")
             response.raise_for_status()
+            print(response)
+            print(response.json())
             return response.json()
         except httpx.HTTPError as e:
             raise RuntimeError(f"Failed to drop collection: {e}")

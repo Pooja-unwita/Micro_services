@@ -147,6 +147,8 @@ class CollectionCreator:
         
     async def has_collection(self, collection_name: str) -> bool:
         await self.ctx.connect()
+        booler = self.ctx.sync_client.has_collection(collection_name)
+        print("Has Collection Check:", booler)
         return self.ctx.sync_client.has_collection(collection_name)
     
     

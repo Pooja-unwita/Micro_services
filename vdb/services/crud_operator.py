@@ -109,6 +109,9 @@ class CrudOperator:
 
     async def drop_collection(self, collection_name: str):
         await self.ctx.connect()
-        await self.ctx.client.drop_collection(collection_name)
+        print("Dropping Collection:", collection_name)
+        dropped =await self.ctx.client.drop_collection(collection_name)
+        print("Drop Collection Result:", dropped)
+        return dropped
 
     
