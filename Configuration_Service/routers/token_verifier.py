@@ -16,7 +16,7 @@ config_loder = HandlerConfigLoader()
 auth_config = config_loder.get_config(config_key="Authentication")
 auth_client = AuthenticationClient(config=auth_config)
 
-async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict: # change the name - service_token_verifier
     """
     Verifies the JWT token with the auth service.
     """

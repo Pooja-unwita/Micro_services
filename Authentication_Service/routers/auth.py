@@ -46,6 +46,7 @@ app = FastAPI()
 security = HTTPBearer()   
 @serve.deployment
 @serve.ingress(app)
+
 class AuthService:
 
     def __init__(self):
@@ -63,7 +64,7 @@ class AuthService:
             raise e
 
 
-    @app.post("/verify-token")
+    @app.post("/verify-token") # response model
     async def verify_token_endpoint(self, request: VerifyRequest, credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
         """
         Verifies the JWT token using the public keys from the JWKS endpoint.````
