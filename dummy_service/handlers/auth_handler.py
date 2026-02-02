@@ -7,7 +7,7 @@ import httpx
 import jwt
 import requests
 from utils.set_attribute import AttributeSetter
-print("hi")
+
 _token_context: ContextVar[Optional[str]] = ContextVar('auth_token', default=None)
 _token_expiry_context: ContextVar[Optional[datetime]] = ContextVar('token_expiry', default=None)
 

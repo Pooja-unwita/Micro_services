@@ -105,18 +105,18 @@ async def simulate_user(user_id: int):
     async with semaphore:
         token = await authenticate()
 
-        insert_task = asyncio.create_task(
-            vdb_handler.insert_documents(
-                documents=[
-                    {
-                        "chunks": f"hello from user {user_id}",
-                        "vectors": [0.4] * 1024,
-                        "metadata": f'{{"filename": "parallel_2"}}'
-                    }
-                ],
-                token=token
-            )
-        )
+        # insert_task = asyncio.create_task(
+        #     vdb_handler.insert_documents(
+        #         documents=[
+        #             {
+        #                 "chunks": f"hello from user {user_id}",
+        #                 "vectors": [0.4] * 1024,
+        #                 "metadata": f'{{"filename": "parallel_2"}}'
+        #             }
+        #         ],
+        #         token=token
+        #     )
+        # )
 
         delete_task = asyncio.create_task(
             vdb_handler.delete_documents_by_filename(
@@ -126,17 +126,17 @@ async def simulate_user(user_id: int):
             )
         )
 
-        search_task = asyncio.create_task(
-            vdb_handler.search(
-                dense_vecs=[[0.1] * 1024],
-                token=token
-            )
-        )
+        # search_task = asyncio.create_task(
+        #     vdb_handler.search(
+        #         dense_vecs=[[0.1] * 1024],
+        #         token=token
+        #     )
+        # )
 
         results = await asyncio.gather(
-            insert_task,
+            # insert_task,
             delete_task,
-            search_task,
+            # search_task,
             return_exceptions=True
         )
 
@@ -171,8 +171,8 @@ async def test_concurrent_users(user_count: int = 20):
 if __name__ == "__main__":    
     import asyncio
 
-    #asyncio.run(test_concurrent_users(user_count=10))
-    #asyncio.run(test_drop_collection())
-    asyncio.run(test_parallel_operations())
-    asyncio.run(test_create_collection())
-    #asyncio.run(test_delete_by_filename())
+    asyncio.run(test_concurrent_users(user_count=2))
+    # asyncio.run(test_drop_collection())
+    # asyncio.run(test_parallel_operations())
+    # asyncio.run(test_create_collection())
+    # asyncio.run(test_delete_by_filename())

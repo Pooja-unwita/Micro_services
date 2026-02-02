@@ -1,5 +1,5 @@
 Authentication:
-  base_url: http://localhost:8003
+  base_url: http://localhost:8004/auth
   max_concurrency: 50
   workers: 1
   headers:

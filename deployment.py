@@ -18,7 +18,7 @@ GENERATED_CONFIG = CONFIG_SERVICE_DIR / "config_files" / "handler_config.yaml"
 SERVICES = [
     ROOT_DIR / "Authentication_Service",
     ROOT_DIR / "Embedding_Service",
-    ROOT_DIR / "Vector_database_management_service",
+    ROOT_DIR / "vdb",
 ]
 
 WAIT_TIMEOUT = 30  # seconds
@@ -30,7 +30,7 @@ POLL_INTERVAL = 1  # seconds
 # ----------------------------
 
 def run_configuration_service():
-    print("▶ Starting Configuration Service...")
+    print("Starting Configuration Service...")
 
     return subprocess.Popen(
         [sys.executable, str(CONFIG_MAIN)],
@@ -41,12 +41,12 @@ def run_configuration_service():
 
 
 def wait_for_handler_config():
-    print("⏳ Waiting for handler_config.yaml to be generated...")
+    print("Waiting for handler_config.yaml to be generated...")
 
     waited = 0
     while waited < WAIT_TIMEOUT:
         if GENERATED_CONFIG.exists():
-            print("✔ handler_config.yaml detected")
+            print("handler_config.yaml detected")
             return
         time.sleep(POLL_INTERVAL)
         waited += POLL_INTERVAL
@@ -55,7 +55,7 @@ def wait_for_handler_config():
 
 
 def distribute_config():
-    print("📦 Distributing handler_config.yaml to services...")
+    print("Distributing handler_config.yaml to services...")
 
     for service in SERVICES:
         handlers_dir = service / "handlers"
@@ -66,7 +66,7 @@ def distribute_config():
         destination = handlers_dir / "handler_config.yaml"
         shutil.copy2(GENERATED_CONFIG, destination)
 
-        print(f"  ✔ Copied to {destination}")
+        print(f"Copied to {destination}")
 
 
 # ----------------------------
@@ -81,10 +81,10 @@ def main():
         wait_for_handler_config()
         distribute_config()
 
-        print("\n✅ Deployment completed successfully")
+        print("\nDeployment completed successfully")
 
     except Exception as e:
-        print(f"\n❌ Deployment failed: {e}")
+        print(f"\n Deployment failed: {e}")
         if config_process:
             config_process.terminate()
         sys.exit(1)

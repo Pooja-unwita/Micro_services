@@ -1,5 +1,5 @@
 Authentication:
-  base_url: http://localhost:8003
+  base_url: http://localhost:8004/auth
   max_concurrency: 50
   workers: 1
   headers:
@@ -27,17 +27,6 @@ Configuration:
     Content-Type: application/json
     User-Agent: ConfigurationClient/1.0
   timeout: 30
-  http_limits:
-    max_connections: 100
-    max_keepalive_connections: 20
-
-Milvus_Vector_Database:
-  base_url: http://localhost:8005/milvus
-  max_concurrency: 50
-  headers:
-    Content-Type: application/json
-    User-Agent: MilvusClient/1.0
-  timeout: 60
   http_limits:
     max_connections: 100
     max_keepalive_connections: 20

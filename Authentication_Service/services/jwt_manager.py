@@ -4,7 +4,7 @@ import jwt
 from datetime import datetime, timedelta, timezone
 import base64
 from cryptography.hazmat.primitives.asymmetric import rsa
-from models.models import JWKS  
+from Authentication_Service.models.models import JWKS  
 # this has to given as relative path from where the script is run
 KEYS = {
     "key-1": {

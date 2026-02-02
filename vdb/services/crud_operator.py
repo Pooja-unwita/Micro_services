@@ -69,6 +69,7 @@ class CrudOperator:
             collection_name=collection_name,
             filter=expr,
         )
+        print("Delete Count Result:", delete_count)
         return {"filename": filename, "delete_count": delete_count.get("delete_count"), "cost": delete_count.get("cost")}
 
 
