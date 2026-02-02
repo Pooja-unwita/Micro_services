@@ -172,5 +172,3 @@ class MilvusService:
             raise HTTPException(status_code=404, detail="Collection not found") 
         return await self.crud.delete_by_filename(collection_name=collection_name, filename=filename, field_name=field_name)
     
-def milvus_service_builder(args):
-    return MilvusService.bind(milvus_config= args["milvus_config"])
