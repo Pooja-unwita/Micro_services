@@ -1,5 +1,5 @@
 from pymilvus import AsyncMilvusClient, MilvusClient
-from Vector_database_management_service.utils.set_attribute import AttributeSetter
+from vdb.utils.set_attribute import AttributeSetter
 import copy
 import logging
 

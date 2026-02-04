@@ -61,7 +61,7 @@ applications:
   - name: SparseVectorizer
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 4
+      max_replicas: 2
       target_num_ongoing_requests_per_replica: 10
       upscale_delay_s: 2
       downscale_delay_s: 10
@@ -78,7 +78,7 @@ applications:
   - name: EmbeddingService
     autoscaling_config:
       min_replicas: 1
-      max_replicas: 4
+      max_replicas: 2
       target_num_ongoing_requests_per_replica: 10
       upscale_delay_s: 2
       downscale_delay_s: 10
@@ -116,118 +116,118 @@ applications:
       num_gpus: 0.0
 
 
-- name: Milvus_Service
-  import_path: vdb.main:milvus_service_builder
-  route_prefix: /milvus
+# - name: Milvus_Service
+#   import_path: vdb.main:milvus_service_builder
+#   route_prefix: /milvus
 
 
-  args:
-    milvus_config:
-      host: "localhost"
-      port: "19530"
-      database: "default"
-      collection_name: "documents_v1"
-      metric_type: "COSINE"
-      top_k: 5
-      output_fields:
-        - chunks
-        - metadata
+#   args:
+#     milvus_config:
+#       host: "localhost"
+#       port: "19530"
+#       database: "default"
+#       collection_name: "documents_v1"
+#       metric_type: "COSINE"
+#       top_k: 5
+#       output_fields:
+#         - chunks
+#         - metadata
 
-      ann_field: "vectors"
+#       ann_field: "vectors"
 
-      Schema:
-        fields:
-          - name: id
-            dtype: INT64
-            is_primary: true
-            auto_id: true
-          - name: chunks
-            dtype: VARCHAR
-            max_length: 65535
-          - name: vectors
-            dtype: FLOAT_VECTOR
-            dim: 1024
-          - name: metadata
-            dtype: VARCHAR
-            max_length: 65500
+#       Schema:
+#         fields:
+#           - name: id
+#             dtype: INT64
+#             is_primary: true
+#             auto_id: true
+#           - name: chunks
+#             dtype: VARCHAR
+#             max_length: 65535
+#           - name: vectors
+#             dtype: FLOAT_VECTOR
+#             dim: 1024
+#           - name: metadata
+#             dtype: VARCHAR
+#             max_length: 65500
 
-      function:
-        name: bm25
-        input_field_names: ["chunks"]
-        output_field_names: ["sparse_vectors_BM25"]
+#       function:
+#         name: bm25
+#         input_field_names: ["chunks"]
+#         output_field_names: ["sparse_vectors_BM25"]
 
-      Hybrid_search:
-        Hybrid_search_flag: false
-        annn_fields:
-          - vectors
-          - sparse_vectors_BM25
-        Hybrid_schema:
-          fields:
-            - name: id
-              dtype: INT64
-              is_primary: true
-              auto_id: true
-            - name: chunks
-              dtype: VARCHAR
-              max_length: 65535
-            - name: vectors
-              dtype: FLOAT_VECTOR
-              dim: 1024
-            - name: metadata
-              dtype: VARCHAR
-              max_length: 65500
-            - name: sparse_vectors_BM25
-              dtype: SPARSE_FLOAT_VECTOR
+#       Hybrid_search:
+#         Hybrid_search_flag: false
+#         annn_fields:
+#           - vectors
+#           - sparse_vectors_BM25
+#         Hybrid_schema:
+#           fields:
+#             - name: id
+#               dtype: INT64
+#               is_primary: true
+#               auto_id: true
+#             - name: chunks
+#               dtype: VARCHAR
+#               max_length: 65535
+#             - name: vectors
+#               dtype: FLOAT_VECTOR
+#               dim: 1024
+#             - name: metadata
+#               dtype: VARCHAR
+#               max_length: 65500
+#             - name: sparse_vectors_BM25
+#               dtype: SPARSE_FLOAT_VECTOR
 
-      indexes:
-        Dense_index:
-          - index_type: IVF_FLAT
-            index_params:
-              nlist: 500
-            search_params:
-              params:
-                nprobe: 50
-              metric_type: COSINE
+#       indexes:
+#         Dense_index:
+#           - index_type: IVF_FLAT
+#             index_params:
+#               nlist: 500
+#             search_params:
+#               params:
+#                 nprobe: 50
+#               metric_type: COSINE
 
-          - index_type: HNSW
-            index_params:
-              M: 30
-              efConstruction: 360
-            search_params:
-              params:
-                ef: 50
-              metric_type: COSINE
+#           - index_type: HNSW
+#             index_params:
+#               M: 30
+#               efConstruction: 360
+#             search_params:
+#               params:
+#                 ef: 50
+#               metric_type: COSINE
 
-        Sparse_index:
-          - index_type: SPARSE_INVERTED_INDEX
-            index_params:
-              inverted_index_algo: DAAT_MAXSCORE
-            search_params:
-              params:
-                drop_ratio_search: 0.2
-              metric_type: IP
+#         Sparse_index:
+#           - index_type: SPARSE_INVERTED_INDEX
+#             index_params:
+#               inverted_index_algo: DAAT_MAXSCORE
+#             search_params:
+#               params:
+#                 drop_ratio_search: 0.2
+#               metric_type: IP
 
 
-  deployments:
-  - name: MilvusService
-    autoscaling_config:
-      min_replicas: 1
-      max_replicas: 4
-      target_num_ongoing_requests_per_replica: 20
-      upscale_delay_s: 2
-      downscale_delay_s: 15
+#   deployments:
+#   - name: MilvusService
+#     autoscaling_config:
+#       min_replicas: 1
+#       max_replicas: 2
+#       target_num_ongoing_requests_per_replica: 20
+#       upscale_delay_s: 2
+#       downscale_delay_s: 15
 
-    max_ongoing_requests: 200
-    max_queued_requests: 200
+#     max_ongoing_requests: 200
+#     max_queued_requests: 200
 
-    graceful_shutdown_wait_loop_s: 2.0
-    graceful_shutdown_timeout_s: 30.0
+#     graceful_shutdown_wait_loop_s: 2.0
+#     graceful_shutdown_timeout_s: 30.0
 
-    health_check_period_s: 10.0
-    health_check_timeout_s: 30.0
+#     health_check_period_s: 10.0
+#     health_check_timeout_s: 30.0
 
-    ray_actor_options:
-      num_cpus: 0.2
-      num_gpus: 0.0
+#     ray_actor_options:
+#       num_cpus: 0.2
+#       num_gpus: 0.0
 
   

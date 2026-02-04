@@ -13,6 +13,7 @@ dependencies = [
     "pyarrow>=22.0.0",
     "pyjwt>=2.10.1",
     "pymilvus[model]>=2.6.6",
+    "pytest>=9.0.2",
     "python-decouple>=3.8",
     "python-jose>=3.5.0",
     "python-multipart>=0.0.21",
