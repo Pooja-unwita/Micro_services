@@ -31,5 +31,4 @@ class JWKS(BaseModel):
 class VerifyRequest(BaseModel):
 
     ISSUER: str
-
     AUDIENCE: str

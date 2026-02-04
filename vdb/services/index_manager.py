@@ -99,15 +99,15 @@ class IndexManager:
             loaded = await self.ctx.client.get_load_state(collection_name)
             
             state = loaded["state"].name
-        
+            is_loaded = False
             if state == "Loaded":
-                return True
-
+                is_loaded = True
                 logger.info(f"Collection '{collection_name}' is loaded in memory.")
             else:
-                return False
-            logger.info(f"Collection '{collection_name}' loaded status: {loaded}")
-            return loaded
+                logger.info(f"Collection '{collection_name}' is not loaded in memory. Current state: {state}")
+            return is_loaded
+            # logger.info(f"Collection '{collection_name}' loaded status: {loaded}")
+            # return loaded
         
         # except Exception as e:
         #     raise e

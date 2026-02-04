@@ -42,22 +42,22 @@ class MilvusService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    @app.delete("/drop_collection", response_model=bool)
-    async def drop_collection(self) -> bool:
+    @app.delete("/drop_collection", response_model=DropcollectionResponse)
+    async def drop_collection(self) -> dict[str,str | bool]:
         if not await self.collection_creator.has_collection(collection_name=self.ctx.collection_name):
             raise HTTPException(status_code=404, detail="Collection not found")
         await self.crud.drop_collection(collection_name=self.ctx.collection_name)
         if await self.collection_creator.has_collection(collection_name=self.ctx.collection_name):
             raise HTTPException(status_code=500, detail="Failed to drop collection")
-        return True
+        return {"collection_name": self.ctx.collection_name, "drop_status": True}
 
-    @app.delete("/drop_collection/{collection_name}", response_model=bool)
-    async def drop_named_collection(self, collection_name: str) -> bool:
+    @app.delete("/drop_collection/{collection_name}", response_model=DropcollectionResponse)
+    async def drop_named_collection(self, collection_name: str) -> dict[str,str | bool]:
         if await self.collection_creator.has_collection(collection_name=collection_name):
             await self.crud.drop_collection(collection_name=collection_name)
             if await self.collection_creator.has_collection(collection_name=collection_name):
                 raise HTTPException(status_code=500, detail="Failed to drop collection")
-            return True
+            return {"collection_name": collection_name, "drop_status": True}
         else:
             raise HTTPException(status_code=404, detail="Collection not found")   
              
@@ -160,10 +160,10 @@ class MilvusService:
 
     @app.delete("/delete_by_filename",response_model=DeleteByFilenameResponse)
     # async def delete_by_filename(self,payload: DeleteByFilenameInput) -> bool  : 
-    async def delete_by_filename(self,filename:str, field_name: str = "metadata", token: dict = Depends(verify_token)) -> dict  :
+    async def delete_by_filename(self,filename:str, token: dict = Depends(verify_token)) -> dict  :
         if not await self.collection_creator.has_collection(collection_name=self.ctx.collection_name):
             raise HTTPException(status_code=404, detail="Collection not found")  
-        return await self.crud.delete_by_filename(collection_name=self.ctx.collection_name, filename=filename, field_name=field_name)
+        return await self.crud.delete_by_filename(collection_name=self.ctx.collection_name, filename=filename, field_name=self.ctx.deletion_field_name)
     
 
     @app.delete("/delete_by_filename/{collection_name}",response_model=DeleteByFilenameResponse)

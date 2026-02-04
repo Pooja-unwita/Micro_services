@@ -178,7 +178,7 @@
 #             raise RuntimeError(f"Failed to delete documents by filename '{filename}': {e}")
 import asyncio
 import httpx
-from ..utils.set_attribute import AttributeSetter
+from utils.set_attribute import AttributeSetter
 
 class VDBHandler:
     def __init__(self, config: dict):

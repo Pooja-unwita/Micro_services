@@ -17,7 +17,7 @@ class CrudOperator:
         res = await self.ctx.client.insert(
             collection_name=collection_name, data=documents
         )
-        res["file_name"] = "dummy"
+        res["file_name"] = "file_name" # take file name from metadata if needed
         return res
 
     async def delete_by_ids(self, collection_name: str, ids: List[int]) -> bool:
@@ -44,7 +44,7 @@ class CrudOperator:
         return True
 
 
-    async def delete_by_filename(self, collection_name: str, filename: str, field_name) -> str:
+    async def delete_by_filename(self, collection_name: str, filename: str, field_name: str) -> str:
         """
         Delete entities where a VARCHAR field contains a given filename.
 
@@ -72,41 +72,6 @@ class CrudOperator:
         print("Delete Count Result:", delete_count)
         return {"filename": filename, "delete_count": delete_count.get("delete_count"), "cost": delete_count.get("cost")}
 
-
-    # async def delete_by_field_values(self, collection_name: str, field_name: str, values: List[Union[int, str]]) -> bool:
-    #     """
-    #     Delete entities by matching values on a scalar field.
-
-    #     Examples:
-    #         delete_by_field_values("id", [1, 2, 3])
-    #         delete_by_field_values("user_id", [10])
-    #         delete_by_field_values("filename", ["a.pdf", "b.pdf"])
-    #     """
-    #     await self.ctx.connect()
-
-    #     if not field_name or not values:
-    #         return True
-
-    #     if len(values) == 1:
-    #         value = values[0]
-    #         if isinstance(value, str):
-    #             value = value.replace('"', '\\"')
-    #             expr = f'{field_name} == "{value}"'
-    #         else:
-    #             expr = f"{field_name} == {value}"
-    #     else:
-    #         if isinstance(values[0], str):
-    #             escaped = [f'"{v.replace(chr(34), "\\\"")}"' for v in values]
-    #             expr = f"{field_name} in [{', '.join(escaped)}]"
-    #         else:
-    #             expr = f"{field_name} in {values}"
-
-    #     await self.ctx.client.delete(
-    #         collection_name=collection_name,
-    #         filter=expr,
-    #     )
-
-    #     return True
     async def drop_collection(self, collection_name: str):
             await self.ctx.connect()
             print("Dropping Collection:", collection_name)

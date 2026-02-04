@@ -34,7 +34,7 @@ Configuration:
     max_keepalive_connections: 20
 
 Milvus_Vector_Database:
-  base_url: http://localhost:8005/milvus
+  base_url: http://localhost:8004/milvus
   max_concurrency: 50
   headers:
     Content-Type: application/json

@@ -1,6 +1,7 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from pymilvus.model.sparse.bm25.tokenizers import build_default_analyzer
 from pymilvus.model.sparse import BM25EmbeddingFunction
+from Embedding_Service.models.models import SparseEmbeddingResponse
 from pymilvus import model 
 import asyncio
 import ray
@@ -47,7 +48,7 @@ class SparseVectorizer:
         except Exception as e:
             raise
     
-    async def bm25_vectorise_text(self, docs:list) -> List[dict]:
+    async def bm25_vectorise_text(self, docs:list) -> Dict[str, List[Dict[int, float]]]:
         """
         Generate sparse embeddings for a list of texts using BM25.
 
@@ -63,11 +64,11 @@ class SparseVectorizer:
             self.bm25_ef.fit(docs.text)
             docs_embeddings_org = self.bm25_ef.encode_documents(docs.text)
             docs_embeddings = self.csr_to_dict(docs_embeddings_org)
-            return docs_embeddings
+            return {"embedding": docs_embeddings}
         except Exception as e:
             raise
 
-    async def build_splade_embeddings(self, docs: list) -> list[Dict]:
+    async def build_splade_embeddings(self, docs: list) -> Dict[str, List[Dict[int, float]]]:
         """
         Generate sparse embeddings for a list of texts using SPLADE and add them to their metadata.
         Returns:
@@ -80,11 +81,11 @@ class SparseVectorizer:
 
             docs_embeddings = self.splade_ef.encode_documents(docs.text)
             docs_embeddings_conv= self.csr_to_dict(docs_embeddings)
-            return docs_embeddings_conv
+            return {"embedding": docs_embeddings_conv}
         except Exception as e:
             raise
 
-    async def build_TFIDF_embeddings(self, docs: list) -> list[Dict]:
+    async def build_TFIDF_embeddings(self, docs: list) -> Dict[str, List[Dict[int, float]]]:
         """
         Generate sparse embeddings for a list of text using TF-IDF and add them to their metadata.
         Args:
@@ -99,7 +100,7 @@ class SparseVectorizer:
         
         # Convert CSR matrix to list of dicts (same as other methods)
             docs_embeddings = self.csr_to_dict(vectors_sparse)
-            return docs_embeddings
+            return {"embedding": docs_embeddings}
         
         except Exception as e:
             raise
