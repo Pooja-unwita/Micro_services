@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 config_service = ConfigurationService()
 
-@router.get("/get_config_file") # response_model=CofigOutput
+@router.get("/get_config_file")
 async def get_config_file(
     service_name: str = Query(...),
     token: dict = Depends(verify_token),

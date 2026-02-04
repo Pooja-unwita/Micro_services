@@ -5,7 +5,9 @@ import os
 from Embedding_Service.models.models import TEIInput
 import torch
 import gc
+from typing import List, Dict
 from sentence_transformers import SentenceTransformer
+
 @serve.deployment
 class QueryVectorizer:
     """
@@ -44,8 +46,7 @@ class QueryVectorizer:
                 )
             )
 
-
-    async def embed(self, payload):
+    async def embed(self, payload)-> Dict[str, List[List[float]]]:
         """Embed the input texts using the TEI service with specified annotation."""
         if self.tei_flag:
 
@@ -64,7 +65,7 @@ class QueryVectorizer:
                 )
                 resp.raise_for_status()
                 data = resp.json()
-                return data
+                return {"embedding": data["embedding"]} # check the response structure once
             except Exception as e:
                 raise
         elif self.custom_flag:
@@ -79,7 +80,7 @@ class QueryVectorizer:
 
                 embedding_list = embedding.tolist()
 
-                return embedding_list
+                return {"embedding": embedding_list}
             except Exception as e:
                 raise e
         else:

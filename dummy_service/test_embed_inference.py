@@ -22,7 +22,8 @@ async def main():
     await embedd_client.startup()
     
     text = "Helooooo"
-    embedding = await embedd_client.dense_query(["hello"], token=token)
-    print(len(embedding[0]))
+    embedding = await embedd_client.dense_text(["hello"], token=token)
+    print(len(embedding["embedding"][0]))
+    print(type(embedding["embedding"][0]))
 
 asyncio.run(main())

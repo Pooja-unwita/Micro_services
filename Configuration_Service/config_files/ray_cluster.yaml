@@ -134,6 +134,7 @@ applications:
         - metadata
 
       ann_field: "vectors"
+      deletion_field_name: "metadata"
 
       Schema:
         fields:

@@ -171,8 +171,8 @@ async def test_concurrent_users(user_count: int = 20):
 if __name__ == "__main__":    
     import asyncio
 
-    asyncio.run(test_concurrent_users(user_count=2))
-    # asyncio.run(test_drop_collection())
-    # asyncio.run(test_parallel_operations())
-    # asyncio.run(test_create_collection())
-    # asyncio.run(test_delete_by_filename())
+    #asyncio.run(test_concurrent_users(user_count=2))
+    #asyncio.run(test_drop_collection())
+    asyncio.run(test_parallel_operations())
+    #asyncio.run(test_create_collection())
+    #asyncio.run(test_delete_by_filename())

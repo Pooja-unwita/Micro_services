@@ -25,7 +25,7 @@ class DropCollectionInput(BaseModel):
 
 class DropcollectionResponse(BaseModel):
     collection_name: str
-    status: str
+    drop_status: bool
 
 class DeleteByFilenameInput(BaseModel):
     filename: str

@@ -52,7 +52,7 @@ class TextVectorizer:
                 )
             )
 
-    async def embed(self, payload: EmbedInput) -> List[List[float]]:
+    async def embed(self, payload: EmbedInput) -> Dict[str, List[List[float]]]:
         """Embed the input texts (chunks) using the TEI service."""
 
         if self.tei_flag:
@@ -66,7 +66,7 @@ class TextVectorizer:
                 )
                 resp.raise_for_status()
                 data = resp.json()
-                return data
+                return {"embedding": data["embedding"]} # check the response structure once
 
             except Exception as e:
                 raise e
@@ -83,7 +83,7 @@ class TextVectorizer:
 
                 embedding_list = embedding.tolist()
 
-                return embedding_list
+                return {"embedding": embedding_list}
             except Exception as e:
                 raise e
         else:
