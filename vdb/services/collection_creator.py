@@ -35,6 +35,7 @@ class CollectionCreator:
                         s = s.split("DATATYPE.")[-1]
                     elif "DATATYPE:" in s:
                         s = s.split("DATATYPE:")[-1]
+                        print(s)
                     return s.split(":")[0].strip(" <>").upper()
             normalized_fields = []
             for f in schema_fields:
@@ -77,15 +78,19 @@ class CollectionCreator:
                 "FLOAT_VECTOR": DataType.FLOAT_VECTOR,
                 "VARCHAR": DataType.VARCHAR,
                 "SPARSE_FLOAT_VECTOR": DataType.SPARSE_FLOAT_VECTOR,
+                "JSON" : DataType.JSON
             }
 
             fields = []
+            print(schema_cfg["fields"])
             for f in schema_cfg["fields"]:
                 params = {}
                 if f["dtype"] == "FLOAT_VECTOR":
                     params["dim"] = f["dim"]
                 if f["dtype"] == "VARCHAR":
                     params["max_length"] = f["max_length"]
+                # if f["dtype"] == "JSON":
+                #     params["nullable"] = f["nullable"]
                 params.update({k: f[k] for k in ("is_primary", "auto_id") if k in f})
 
                 fields.append(
@@ -140,9 +145,8 @@ class CollectionCreator:
 
             else:
                 await self.create_schema(collection_name)
-            
+                status = "created"
             await index_manager.ensure_search_ready(collection_name=collection_name)
-            status = "created"
             return {"collection_name": collection_name, "status": status}
             # return True
         except Exception as e:

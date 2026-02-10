@@ -1,6 +1,8 @@
 from pymilvus import AnnSearchRequest, RRFRanker
 import logging
-
+import json
+from typing import List
+from vdb.models.models import ChunkResult,SearchResponse
 logger = logging.getLogger(__name__)
 
 class SearchOperator:
@@ -75,3 +77,31 @@ class SearchOperator:
             top_k=top_k,
             filter_expr=filter_expr
         )
+    import json
+
+    def parse_milvus_results(self,raw_results: list) -> List[List[ChunkResult]]:
+        parsed_results = []
+
+        for query_hits in raw_results:
+            chunks = []
+
+            for hit in query_hits:
+                entity = hit.get("entity", {})
+                # metadata_raw = entity.get("metadata")
+
+                metadata = hit["metadata"]
+                # if metadata_raw:
+                #     metadata = json.loads(metadata_raw)
+
+                chunks.append(
+                    ChunkResult(
+                        id=hit["id"],
+                        distance=hit["distance"],
+                        filename=metadata.get("filename"),
+                        chunks=entity.get("chunks")
+                    )
+                )
+
+            parsed_results.append(chunks)
+
+        return parsed_results

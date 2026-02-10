@@ -20,18 +20,25 @@ async def authenticate():
 async def test_create_collection():
     await vdb_handler.startup()
     result = await vdb_handler.create_collection(token=await authenticate())
-    result2 =await vdb_handler.create_named_collection(collection_name="dear", token=await authenticate())
+    #result2 =await vdb_handler.create_named_collection(collection_name="dear", token=await authenticate())
     print("Create Collection Result:", result)
-    print("Create Named Collection Result:", result2) 
-    result3 =await vdb_handler.insert_documents(documents=[{ "chunks": "hello world", "vectors": [0.1]*1024, "metadata": '{"filename": "greeting"}' } , 
-                                                  { "chunks": "foo bar", "vectors": [0.2]*1024, "metadata": '{"filename": "example"}' } ,
-                                                { "chunks": "lorem ipsum", "vectors": [0.3]*1024, "metadata": '{"filename": "lorem", "pgnumber": 1}' }], token=await authenticate())
+    #print("Create Named Collection Result:", result2) 
+    # result3 =await vdb_handler.insert_documents(documents=[{ "chunks": "hello world", "vectors": [0.1]*1024, "metadata": '{"filename": "greeting"}',"data": {"filename": "greeting","source": "unit_test"} } , 
+    #                                               { "chunks": "foo bar", "vectors": [0.2]*1024, "metadata": '{"filename": "example"}',"data": {"filename": "greeting","source": "unit_test"} } ,
+    #                                             { "chunks": "lorem ipsum", "vectors": [0.3]*1024, "metadata": '{"filename": "lorem", "pgnumber": 1}',"data": {"filename": "greeting","source": "unit_test"} }], token=await authenticate())
+    # result3 =await vdb_handler.insert_documents(documents=[{ "chunks": "hello world", "vectors": [0.1]*1024, "metadata": {"filename": "lorem","source": "unit_test"} } , 
+    #                                               { "chunks": "foo bar", "vectors": [0.2]*1024, "metadata": {"filename": "greeting","source": "unit_test"} } ,
+    #                                             { "chunks": "lorem ipsum", "vectors": [0.3]*1024, "metadata": {"filename": "example","source": "unit_test"} }], token=await authenticate())
 
-    print("Insert Documents Result:", result3)
-    result4 =await vdb_handler.insert_documents_named_collection(collection_name="dear",documents=[{ "chunks": "hello world", "vectors": [0.1]*1024, "metadata": '{"filename": "greeting"}' } , 
-                                                  { "chunks": "foo bar", "vectors": [0.2]*1024, "metadata": '{"filename": "example"}' } ,
-                                                { "chunks": "lorem ipsum", "vectors": [0.3]*1024, "metadata": '{"filename": "lorem"}' }], token=await authenticate())
-    print("Insert Documents Named Collection Result:", result4)
+    # result4 =await vdb_handler.insert_documents_named_collection(collection_name="dear",documents=[{ "chunks": "hello world", "vectors": [0.1]*1024, "metadata": {"filename": "greeting","source": "unit_test"} } , 
+    #                                               { "chunks": "foo bar", "vectors": [0.2]*1024, "metadata": {"filename": "greeting","source": "unit_test"} } ,
+    #                                             { "chunks": "lorem ipsum", "vectors": [0.3]*1024, "metadata": {"filename": "greeting","source": "unit_test"} }], token=await authenticate())
+
+    print("Insert Documents Result:")
+    # result4 =await vdb_handler.insert_documents_named_collection(collection_name="dear",documents=[{ "chunks": "hello world", "vectors": [0.1]*1024, "metadata": '{"filename": "greeting"}' } , 
+    #                                               { "chunks": "foo bar", "vectors": [0.2]*1024, "metadata": '{"filename": "example"}' } ,
+    #                                             { "chunks": "lorem ipsum", "vectors": [0.3]*1024, "metadata": '{"filename": "lorem"}' }], token=await authenticate())
+    # print("Insert Documents Named Collection Result:", result4)
 
     await vdb_handler.shutdown()
 
@@ -46,7 +53,21 @@ async def test_drop_collection():
 
 async def test_delete_by_filename():
     await vdb_handler.startup()
-    result = await vdb_handler.delete_documents_by_filename(filename= "lorem",field_name="metadata", token=await authenticate())
+    result = await vdb_handler.delete_documents_by_filename(filename= ["lorem","example","abna","greeting"], token=await authenticate())
+    print("Delete Documents by Filename Result:", result)
+    await vdb_handler.shutdown()
+
+
+async def test_delete_by_json():
+    await vdb_handler.startup()
+    result = await vdb_handler.delete_documents_by_json_field(filename= ["greeting","lorem","example"], token=await authenticate())
+    print("Delete Documents by Filename Result:", result)
+    await vdb_handler.shutdown()
+
+async def test_delete_by_ids():
+    await vdb_handler.startup()
+    ids=[464155119509574462]
+    result = await vdb_handler.delete_documents_by_ids(ids=ids, token=await authenticate())
     print("Delete Documents by Filename Result:", result)
     await vdb_handler.shutdown()
 
@@ -170,9 +191,13 @@ async def test_concurrent_users(user_count: int = 20):
 
 if __name__ == "__main__":    
     import asyncio
+    #asyncio.run(test_search())
 
     #asyncio.run(test_concurrent_users(user_count=2))
     #asyncio.run(test_drop_collection())
-    asyncio.run(test_parallel_operations())
-    #asyncio.run(test_create_collection())
+    #asyncio.run(test_parallel_operations())
+    #asyncio.run(test_search())
+    asyncio.run(test_create_collection())
+    #asyncio.run(test_delete_by_json())
+    #asyncio.run(test_delete_by_ids())
     #asyncio.run(test_delete_by_filename())

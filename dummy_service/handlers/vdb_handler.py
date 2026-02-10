@@ -338,7 +338,7 @@ class VDBHandler:
         except RuntimeError as e:
             raise RuntimeError(f"Failed to perform search on collection '{collection_name}': {e}") from e
 
-    async def delete_documents_by_filename(self, filename: str, token: str, field_name: str = "metadata"):
+    async def delete_documents_by_filename(self, filename:list[str], token: str, field_name: str = "metadata"):
         try:
             if not self.client:
                 await self.startup()
@@ -350,7 +350,51 @@ class VDBHandler:
                 }
                 response = await self.client.delete(
                     "/delete_by_filename",
-                    params={"filename": filename, "field_name": field_name},
+                    params=[("filename", f) for f in filename],
+                    #params={"filename": filename},
+                    headers=_headers
+                )
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPError as e:
+            raise RuntimeError(f"Failed to delete documents by filename '{filename}': {e}") from e
+    
+    async def delete_documents_by_ids(self, ids :list[int], token: str):
+        try:
+            if not self.client:
+                await self.startup()
+            
+            async with self.semaphore:
+                _headers = {
+                    **self.headers,
+                    "Authorization": f"Bearer {token}",
+                }
+                response = await self.client.delete(
+                    "/delete_by_ids",
+                    params={"ids":ids},
+                    #params={"filename": filename},
+                    headers=_headers
+                )
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPError as e:
+            raise RuntimeError(f"Failed to delete documents by filename '{ids}': {e}") from e
+        
+
+    async def delete_documents_by_json_field(self, filename:list[str], token: str):
+        try:
+            if not self.client:
+                await self.startup()
+            
+            async with self.semaphore:
+                _headers = {
+                    **self.headers,
+                    "Authorization": f"Bearer {token}",
+                }
+                response = await self.client.delete(
+                    "/delete_by_json",
+                    params=[("filename", f) for f in filename],
+                    #params={"filename": filename},
                     headers=_headers
                 )
                 response.raise_for_status()

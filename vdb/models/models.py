@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from pydantic import Field
+from typing import List,Dict,Any
 
 class SearchInput(BaseModel):
     dense_vector: list[list[float]]
@@ -7,9 +9,9 @@ class SearchInput(BaseModel):
     filter_expr: str | None = None
 
 class SearchNamedCollectionInput(BaseModel):
-    collection_name: str
-    dense_vector: list[list[float]]
-    sparse_vector: list[dict] | None = None
+    # collection_name: str
+    dense_vector: List[List[float]]
+    sparse_vector: List[Dict[str, float]] | None = None
     top_k: int | None = None
     filter_expr: str | None = None
 
@@ -28,8 +30,7 @@ class DropcollectionResponse(BaseModel):
     drop_status: bool
 
 class DeleteByFilenameInput(BaseModel):
-    filename: str
-    field_name: str = "metadata"
+    filenames:List[str]
 
 class DeleteByFilenameResponse(BaseModel):
     filename: str
@@ -39,7 +40,32 @@ class DeleteByFilenameResponse(BaseModel):
 class InsertResponse(BaseModel):
     insert_count: int
     ids: list[int]
-    file_name: str
+    
+class ChunkResult(BaseModel):
+    id: int
+    distance: float
+    filename: str
+    chunks: str
+
+class SearchResponse(BaseModel):
+    collection_name : str
+    chunks: List[List[ChunkResult]]
+
+class DocumentInput(BaseModel):
+    chunks: str 
+    vectors: List[float] 
+    metadata: Dict[str, Any] 
+     
+class InsertDocumentsRequest(BaseModel):
+    documents: List[DocumentInput]
 
 
+class FileDeleteInfo(BaseModel):
+    filename: str
+    delete_count: int
+
+class BulkDeleteResponse(BaseModel):
+    collection_name:str
+    files: List[FileDeleteInfo]
+    total_delete_count: int
 

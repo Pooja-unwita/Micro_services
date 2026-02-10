@@ -149,8 +149,9 @@ applications:
             dtype: FLOAT_VECTOR
             dim: 1024
           - name: metadata
-            dtype: VARCHAR
-            max_length: 65500
+            dtype: JSON
+            #nullable: False
+            
 
       function:
         name: bm25
@@ -158,7 +159,7 @@ applications:
         output_field_names: ["sparse_vectors_BM25"]
 
       Hybrid_search:
-        Hybrid_search_flag: false
+        Hybrid_search_flag: True
         annn_fields:
           - vectors
           - sparse_vectors_BM25
@@ -175,8 +176,7 @@ applications:
               dtype: FLOAT_VECTOR
               dim: 1024
             - name: metadata
-              dtype: VARCHAR
-              max_length: 65500
+              dtype: JSON
             - name: sparse_vectors_BM25
               dtype: SPARSE_FLOAT_VECTOR
 
