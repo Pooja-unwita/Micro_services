@@ -32,3 +32,11 @@ class VerifyRequest(BaseModel):
 
     ISSUER: str
     AUDIENCE: str
+
+class TokenPayload(BaseModel):
+    user_name: str
+    scope: list[str]
+    role: str | None = None
+    aud: str
+    email: str | None = None
+    exp: int | None = None

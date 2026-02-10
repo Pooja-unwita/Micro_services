@@ -5,20 +5,11 @@ from datetime import datetime, timedelta, timezone
 import base64
 from cryptography.hazmat.primitives.asymmetric import rsa
 from Authentication_Service.models.models import JWKS  
-# this has to given as relative path from where the script is run
-KEYS = {
-    "key-1": {
-        "private": "Authentication_Service/keys/key1_private.pem",
-        "public": "Authentication_Service/keys/key1_public.pem",
-        "active": False,
-    },
-    "key-2": {
-        "private": "Authentication_Service/keys/key2_private.pem",
-        "public": "Authentication_Service/keys/key2_public.pem",
-        "active": True,
-    }
-}
-# check whether this has to be in config file
+import logging
+
+logger = logging.getLogger('ray.serve')
+
+
 ALGORITHM = "RS256"
 ISSUER = "Auth_Service"
 ACCESS_TOKEN_EXPIRE_MINUTES = 720 #12 hours
@@ -26,8 +17,16 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 720 #12 hours
 class JWTKeyManager:
     """Manages JWT signing keys and token creation."""
 
-    def __init__(self):
-        pass
+    def __init__(self, keys_dict: dict):
+        try:
+            if not keys_dict:
+                logger.error("Keys dictionary cannot be empty")
+                raise ValueError("Keys dictionary cannot be empty")
+            self.keys_dict = keys_dict
+            logger.info("JWTKeyManager initialized successfully with provided keys")
+        except Exception as e:
+            logger.error(f"Failed to initialize JWTKeyManager: {e}")
+            raise
 
     async def load_private_key(self,path: str)-> rsa.RSAPrivateKey:
         """Load a PEM-encoded private key from a file."""
@@ -37,8 +36,10 @@ class JWTKeyManager:
                     f.read(),
                     password=None,
                 )
+            
         except Exception as e:
-            raise e
+            logger.error(f"Failed to load private key from path")
+            raise 
 
     async def load_public_key(self,path: str)-> rsa.RSAPublicKey:
         """Load a PEM-encoded public key from a file."""
@@ -46,16 +47,21 @@ class JWTKeyManager:
             with open(path, "rb") as f:
                 return serialization.load_pem_public_key(f.read())
         except Exception as e:
-            raise e
+            logger.error("Failed to load public key from path")
+            raise 
 
         
     async def get_active_signing_key(self)-> tuple[str, rsa.RSAPrivateKey]:
         """Retrieve the active signing key."""
-
-        for kid, key in KEYS.items():
-            if key["active"]:
-                return kid, await self.load_private_key(key["private"])
-        raise Exception("No active signing key found")
+        try:
+            for kid, key in self.keys_dict.items():
+                if key["active"]:
+                    return kid, await self.load_private_key(key["private"])
+            logger.error("No active signing key found")
+            raise Exception("No active signing key found")
+        except Exception as e:
+            logger.error(f"Failed to get active signing key: {e}")
+            raise
 
 
     async def create_access_token(self,payload: dict)-> str:
@@ -63,20 +69,24 @@ class JWTKeyManager:
         try:
             kid, private_key = await self.get_active_signing_key()
             to_encode = payload.copy()
-            to_encode.update({
-                "iss": ISSUER,
-                "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
-            })
+            if "exp" not in to_encode or to_encode["exp"] is None:
+                exp_time = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+                to_encode["exp"] = int(exp_time.timestamp())
+
+               
+            to_encode["iss"] = ISSUER
             token = jwt.encode(
                 to_encode,
                 private_key,
                 algorithm=ALGORITHM,
                 headers={"kid": kid}
             )
+            logger.info("Access token created successfully")
             return token
-        
+            
         except Exception as e:
-            raise e
+                logger.error(f"Failed to create access token: {e}")
+                raise 
 
     async def int_to_base64(self,n: int) -> base64:
         """Convert an integer to a base64url-encoded string."""
@@ -86,14 +96,15 @@ class JWTKeyManager:
             ).decode("utf-8").rstrip("=")
         
         except Exception as e:
-            raise e
+            logger.error(f"Failed to convert integer to base64: {e}")
+            raise 
 
 
     async def public_key_to_jwk(self,public_key, kid: str)-> dict:
         """Convert a public key to its JWK representation."""
         try:
             numbers = public_key.public_numbers()
-
+           
             return {
                 "kty": "RSA",
                 "kid": kid,
@@ -103,26 +114,35 @@ class JWTKeyManager:
                 "e": await self.int_to_base64(numbers.e),
             }
         except Exception as e:
-            raise e
+            logger.error(f"Failed to convert public key to JWK: {e}")
+            raise 
     
     async def jwks(self)-> JWKS:
         """Expose the JSON Web Key Set (JWKS) endpoint."""
         try:
             jwks_keys = []
-            for kid, key in KEYS.items():
+            for kid, key in self.keys_dict.items():
                 public_key = await self.load_public_key(key["public"])
                 jwks_keys.append(await self.public_key_to_jwk(public_key, kid))
+            logger.info("JWKS generated successfully")
             return {"keys": jwks_keys}
         except Exception as e:
-            raise e
+            logger.error(f"Failed to generate JWKS: {e}")
+            raise 
     
     async def get_key_from_jwks(self, token: str):
         """Retrieve the signing key from JWKS based on the token's KID."""
-        header = jwt.get_unverified_header(token)
-        kid = header["kid"]
+        try:
+            header = jwt.get_unverified_header(token)
+            kid = header["kid"]
 
-        jwks = await self.jwks()
-        for key in jwks["keys"]:
-            if key["kid"] == kid:
-                return jwt.algorithms.RSAAlgorithm.from_jwk(key)
-        raise Exception("Signing key not found")
+            jwks = await self.jwks()
+            for key in jwks["keys"]:
+                if key["kid"] == kid:
+                    
+                    return jwt.algorithms.RSAAlgorithm.from_jwk(key)
+            logger.error("Signing key not found in JWKS")
+            raise Exception("Signing key not found")
+        except Exception as e:
+            logger.error(f"Failed to get key from JWKS: {e}")
+            raise

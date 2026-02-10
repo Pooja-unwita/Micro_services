@@ -10,6 +10,7 @@ dependencies = [
     "fastapi>=0.127.0",
     "httpx>=0.28.1",
     "nltk>=3.9.2",
+    "onnxruntime>=1.23.2",
     "pyarrow>=22.0.0",
     "pyjwt>=2.10.1",
     "pymilvus[model]>=2.6.6",
